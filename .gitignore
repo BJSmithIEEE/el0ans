@@ -1,0 +1,10 @@
+ansible*.log
+ansible*.log.gz
+*.rar
+*.tar
+*.tar.bz
+*.tar.gz
+*.tar.xz
+*.tgz
+*.zip
+
