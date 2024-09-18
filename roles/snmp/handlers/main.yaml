@@ -1,0 +1,34 @@
+#
+#####   el0ans/roles/snmp/handlers/main.yaml
+---
+
+- name: allow firewall_snmp
+  become: yes
+  firewalld:
+    service: "{{ item }}"
+    state: enabled
+    zone:  public
+    permanent: yes
+    immediate: yes
+  with_items:  
+    - snmp
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version|int >= 7
+    - myFwAlternative is not defined
+
+- name: enable_restart snmpd
+  become: yes
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: yes
+    enabled: yes
+    masked:  no
+    state:   restarted 
+  with_items:  
+    - snmpd
+  ignore_errors: yes
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version|int >= 7
+

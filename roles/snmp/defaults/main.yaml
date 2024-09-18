@@ -1,0 +1,65 @@
+#
+#####   el0ans/roles/snmp/defaults/main.yaml
+--- 
+
+
+### SNMP daemon security defaults
+# Access SNMPv3 service only from network(s) to these network(s)
+el0snmp_tcpAllow: '10. 192.168. 172.16.0.0/255.255.240.0'
+# Access SNMPv3 service only for these top-level MIB(s)
+el0snmp_topMib:   '.1.3.6'
+
+### SNMP daemon runtime options
+# limit local journald/rsyslog of SNMP events to only 0-2 (CRIT and higher), otherwise it will be excessive                   
+el0snmp_options:  '-LS0-2d'
+
+### SNMPv3 Read-Only username/password (defaults)
+# WARNING:  These should be stored, encrypted, into an Ansible vault instead of here (and overide these defaults)
+el0snmp_v3roUser: snmpv3user
+el0snmp_v3roPass: elmedia0bang
+
+### Default SELinux file context types
+# File types based on RHEL7-8, should be the same for RHEL6.10, verify RHEL9.x
+def_setype_etc_snmpd: etc_t
+def_setype_etc_sysconfig: etc_t
+def_setype_etc_tcpWrappers: net_conf_t
+def_setype_varlib_snmpd: snmpd_var_lib_t
+
+# WARNING:  before net-snmp 5.8+ (RHEL 8+), passing any number after SHA (e.g., SHA-512, SHA-256, SHA-1)
+#           will actually set hash to MD5 (yikes!!!), expect similar with AES as well (likely default to DES)
+#           net-snmp <5.8 (RHEL <8) uses SHA[-1] and AES[128] and offers no other options (than MD5 and DES)
+
+### Stanzas of configuration hashes for each RHEL release
+# RHEL6
+el0snmp_RedHat6: { cipher: AES
+  , hash: SHA
+  , setype_etc_snmpd: "{{ def_setype_etc_snmpd }}"
+  , setype_etc_sysconfig: "{{ def_setype_etc_sysconfig }}"
+  , setype_etc_tcpWrappers: "{{ def_setype_etc_tcpWrappers }}"
+  , setype_varlib_snmpd: "{{ def_setype_varlib_snmpd }}"
+}
+# RHEL7
+el0snmp_RedHat7: { cipher: AES
+  , hash: SHA
+  , setype_etc_snmpd: "{{ def_setype_etc_snmpd }}"
+  , setype_etc_sysconfig: "{{ def_setype_etc_sysconfig }}"
+  , setype_etc_tcpWrappers: "{{ def_setype_etc_tcpWrappers }}"
+  , setype_varlib_snmpd: "{{ def_setype_varlib_snmpd }}"
+}
+# RHEL8
+el0snmp_RedHat8: { cipher: AES256
+  , hash: SHA-512
+  , setype_etc_snmpd: "{{ def_setype_etc_snmpd }}"
+  , setype_etc_sysconfig: "{{ def_setype_etc_sysconfig }}"
+  , setype_etc_tcpWrappers: "{{ def_setype_etc_tcpWrappers }}"
+  , setype_varlib_snmpd: "{{ def_setype_varlib_snmpd }}"
+}
+# RHEL9
+el0snmp_RedHat9: { cipher: AES256
+  , hash: SHA-512
+  , setype_etc_snmpd: "{{ def_setype_etc_snmpd }}"
+  , setype_etc_sysconfig: "{{ def_setype_etc_sysconfig }}"
+  , setype_etc_tcpWrappers: "{{ def_setype_etc_tcpWrappers }}"
+  , setype_varlib_snmpd: "{{ def_setype_varlib_snmpd }}"
+}
+

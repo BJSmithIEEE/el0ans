@@ -1,0 +1,166 @@
+#
+#####   el0ans/roles/snmp/tasks/main.yaml
+---
+
+- name: End play if not RHEL family
+  meta: end_host
+  when: ansible_os_family != "RedHat"
+     
+- name: End play if not RHEL release 6+
+  meta: end_host
+  when: ansible_distribution_major_version|int < 6 
+
+
+- name: only run this on non-Production systems or if Commit is explicitly passed and true for Production
+  block:  
+
+    - name: Set el0snmp facts for Ansible OS Family and Distribution Major Version
+      set_fact:  
+        el0snmp_famRelVer:  "{{ lookup('vars', 'el0snmp_' + ansible_os_family + ansible_distribution_major_version) }}"
+   
+
+    # NOTE:  Need to check this for RHEL9
+    - name: Ensure net-snmpd is installed
+      become: yes
+      yum:
+        update_cache: yes
+        name: 
+          - net-snmp
+          - net-snmp-libs
+          - net-snmp-utils
+        autoremove:  no
+        disable_gpg_check:  no
+        skip_broken:  no
+        state:  present
+        use_backend:  auto
+      notify:
+        - allow firewall_snmp
+        - enable_restart snmpd
+    
+
+    - name: Check for snmpd runtime configuration file
+      become: yes
+      stat:
+        path: /var/lib/net-snmp/snmpd.conf
+        get_checksum: no
+      register: el0snmp_ckSetup
+   
+
+    - name: snmpd initialization
+      block:
+    
+        - name: Initialize/create snmpd runtime configuration file (/var/lib/net-snmp/snmpd.conf)
+          become: yes
+          lineinfile:  
+            path:  /var/lib/net-snmp/snmpd.conf
+            regexp: '^[ \t]*createUser[ \t]+.*$'
+            line:   'createUser {{ el0snmp_v3roUser }} {{ el0snmp_famRelVer.hash }} "{{ el0snmp_v3roPass }}" {{ el0snmp_famRelVer.cipher }} "{{ el0snmp_v3roPass}}"'
+            insertafter: EOF
+            backup: yes
+            create: yes
+            state: present
+            mode:  0600
+            owner: root
+            group: root
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "{{ el0snmp_famRelVer.setype_varlib_snmpd }}"
+          notify:
+            - allow firewall_snmp
+            - enable_restart snmpd
+    
+        - name: Initialize/update snmpd etc configuration file (/etc/snmp/snmpd.conf)
+          become: yes
+          lineinfile:  
+            path:  /etc/snmp/snmpd.conf
+            regexp: '^[ \t]*rouser[ \t]+.*$'
+            line:   'rouser {{ el0snmp_v3roUser }} priv {{ el0snmp_topMib }}'
+            insertafter: EOF
+            backup: yes
+            create: yes
+            state: present
+            mode:  0600
+            owner: root
+            group: root
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "{{ el0snmp_famRelVer.setype_etc_snmpd }}"
+          notify:
+            - allow firewall_snmp
+            - enable_restart snmpd
+    
+      when: el0snmp_ckSetup.stat.exists == false
+    
+    
+    - name: snmpd validation
+      block:  
+    
+        - name: Validate no legacy v1 or v2c configuration is enabled
+          become: yes
+          replace:
+            path:  /etc/snmp/snmpd.conf
+            regexp:  "{{ item }}"
+            replace:  '### disabled by el0snmp role - insecure v1/v2c ###\t\1'
+            backup: yes
+    # not in replace #        create: no
+    # leave existing #        mode:   0600
+    # leave existing #        owner:  root
+    # leave existing #        group:  root
+    # leave existing #        seuser: "system_u"
+    # leave existing #        serole: "object_r"
+    # leave existing #        setype: "{{ def_setype_etc_snmpd }}"
+          with_items:  
+              - '^[ \t]*(access.*)$'
+              - '^[ \t]*(com2sec.*)$'
+              - '^[ \t]*(group.*[ \t]+v1[ \t]+.*)$'
+              - '^[ \t]*(group.*[ \t]+v2c[ \t]+.*)$'
+              - '^[ \t]*(public.*)$'
+              - '^[ \t]*(rocommunity.*)$'
+              - '^[ \t]*(rwcommunity.*)$'
+              - '^[ \t]*(view.*)$'
+          notify:
+            - enable_restart snmpd
+    
+        - name: Validate options to mitigate excessive logging (only log 0-2, EMERG, ALERT, CRIT)
+          become: yes
+          lineinfile:  
+            path:  /etc/sysconfig/snmpd
+            regexp: '^[ \t]*OPTIONS=.*$'
+            line:   'OPTIONS=-LS0-2d'
+            insertafter: EOF
+            backup: yes
+            create: yes
+            state: present
+            mode:  0644
+            owner: root
+            group: root
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "{{ el0snmp_famRelVer.setype_etc_sysconfig }}"
+          notify:
+            - enable_restart snmpd
+    
+        - name: Use TCP Wrappers to deny access except from loopback and private server subnet(s)
+          become: yes
+          lineinfile:
+            path:  /etc/hosts.deny
+            regexp: '^[ \t]*snmpd:.*$'
+            line:   'snmpd: ALL EXCEPT 127. {{ el0snmp_tcpAllow }}'
+            insertafter: EOF
+            backup: yes
+            create: yes
+            state: present
+            mode:  0644
+            owner: root
+            group: root
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "{{ el0snmp_famRelVer.setype_etc_tcpWrappers }}"
+          notify:
+            - enable_restart snmpd
+    
+  when:
+    - ( myProd is not defined ) or
+      ( myProd is defined and myProd|bool != true ) or
+      ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+

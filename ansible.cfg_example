@@ -1,0 +1,26 @@
+#
+#	el0ans/ansible.cfg_example
+
+[defaults]
+host_key_checking = true
+inventory = ./inventory
+log_path  = ./ansible.log
+ask_pass  = true
+timeout   = 60
+gather_timeout = 120
+
+[privilege_escalation]
+become            = false
+become_user       = root
+
+### sudo
+# sudo # become_method     = sudo
+# sudo # become_ask_pass   = true
+
+### CentrifyDC
+# CDC # become_method     = dzdo
+# CDC # become_ask_pass   = false
+# CDC # become_dzdo_user  = root
+# CDC # (optional) # become_dzdo_flags = -n
+# CDC # (optional) # become_dzdo_flags = "su - root -c"
+
