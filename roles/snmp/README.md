@@ -1,4 +1,4 @@
-# ELMedia0 Ansible Role SNMP
+# Ansible Role SNMP
 
 The SNMP (Simple Network Management Protocol) role in the repository [el0ans](https://github.com/BJSmithIEEE/el0ans/) provides an Ansible automation solution to configure RHEL provided `net-snmp` SNMPv3 read-only on target machines.  This role is part of a collection of Ansible playbooks and roles designed for managing post-installation configurations on Enterprise Linux (EL) systems.
 
