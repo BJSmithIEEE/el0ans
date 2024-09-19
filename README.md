@@ -1,6 +1,6 @@
 # ELMedia0 Ansible Post-install
 
-Ansible and Ansible Core playbooks and roles for Enterprise Linux (EL) Media [Builder] Naught (0) post-installation (including in the Kickstart `%post`).
+Ansible and Ansible Core playbooks and roles for [Enterprise Linux (EL) Media Builder Naught (0)](https://github.com/BJSmithIEEE/elmedia0/) post-installation (including in the Kickstart `%post`).
 
 
 ## Ansible Roles
