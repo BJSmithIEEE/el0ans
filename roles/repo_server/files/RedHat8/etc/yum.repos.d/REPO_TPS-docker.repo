@@ -1,0 +1,15 @@
+#
+#       /etc/yum.repos.d/REPO_TPS-docker.repo
+#       REPO Server repos for Docker
+#
+
+[docker_docker-ce]
+enabled=0
+countme=0
+name=REPO Server - Docker Community Edition (CE) for el$releasever - Unsupported
+#excludepkgs=
+#baseurl=file:///opt/softdist/yum/TPS8/$basearch/gitlab_gitlab-ce
+baseurl=https://download.docker.com/linux/centos/$releasever/$basearch/stable
+#baseurl=https://download.docker.com/linux/rhel/$releasever/$basearch/stable
+gpgcheck=1
+

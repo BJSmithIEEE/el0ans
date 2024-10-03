@@ -1,0 +1,12 @@
+#
+#	/etc/httpd/conf.d/softdist.conf
+
+alias /softdist /storage/softdist
+<Directory /storage/softdist>
+	Options +Indexes
+	IndexOptions +FancyIndexing +FoldersFirst +HTMLTable +NameWidth=*
+	Order allow,deny
+	Allow from all
+	Require all granted
+</Directory>
+

@@ -1,0 +1,24 @@
+#
+#       /etc/yum.repos.d/REPO_TPS-intel.repo
+#       REPO Server repos for Intel
+#
+#	TPS Intel considerations:
+#	  - HUGE Repo
+#	      Use 'includepkgs=' to limit packages/versions 
+#	  - Location of software in Intel YUM Repos:
+#	       Intel oneAPI:	https://yum.repos.intel.com/oneapi
+
+#####
+#####	Intel oneAPI
+#####
+
+[intel_oneAPI]
+baseurl=https://yum.repos.intel.com/oneapi
+countme=0
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+name=Intel oneAPI repository
+# includepkgs - only allow these packages
+# includepkgs=
+

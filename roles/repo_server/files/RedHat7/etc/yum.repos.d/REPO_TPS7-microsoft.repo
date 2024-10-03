@@ -1,0 +1,54 @@
+#
+#       /etc/yum.repos.d/REPO_TPS7-microsoft.repo
+#       REPO Server repos for Microsoft
+#
+#	TPS8+ Microsoft considerations:
+#	  - Entire archive is too messy to even want to archive
+#	      Use 'includepkgs=' to limit packages/versions 
+#	      Some packages are EL-release specific, others are not, and built generically for EL7+
+#	      Some packages (e.g., Edge) will *NOT* work airgap/off-line, and *BREAKS* YUM/DNF - do *NOT* use airgap/off-line!!!
+#	  - Location of software in Microsoft YUM Repos:
+#	       MS Edge (7+):	https://packages.microsoft.com/yumrepos/edge
+#	       Powershell:	https://packages.microsoft.com/rhel/7/prod
+#              VS Code (7+):	https://packages.microsoft.com/yumrepos/vscode
+
+#####
+#####	Microsoft Edge
+#####
+### WARNING:  MSEdge *BREAKS* YUM/DNF if it cannot 'reach' Microsoft.COM - do *NOT* use airgap/off-line!!!
+[microsoft_msedge]
+baseurl=https://packages.microsoft.com/yumrepos/edge
+countme=0
+enabled=0
+gpgcheck=1
+gpgkey=/etc/pki/rpm-gpg/RPM-GPG-KEY-Microsoft
+name=REPO Server - $basearch - TPS7 - Microsoft - Edge
+# includepkgs - only allow these packages
+includepkgs=microsoft-edge-stable*.x86_64*
+
+#####
+#####	Microsoft Powershell
+#####
+[microsoft_powershell]
+baseurl=https://packages.microsoft.com/rhel/7/prod
+countme=0
+enabled=0
+gpgcheck=1
+gpgkey=/etc/pki/rpm-gpg/RPM-GPG-KEY-Microsoft
+name=REPO Server - $basearch - TPS7 - Microsoft - Powershell
+# includepkgs - only allow these packages
+includepkgs=powershell*.x86_64*
+
+#####
+#####	Microsoft Visual Studio Code
+#####
+[microsoft_vscode]
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+countme=0
+enabled=0
+gpgcheck=1
+gpgkey=/etc/pki/rpm-gpg/RPM-GPG-KEY-Microsoft
+name=REPO Server - $basearch - TPS7 - Microsoft - Visual Studio Code
+# includepkgs - only allow these packages
+includepkgs=code-0*.x86_64*,code-1*.x86_64*,code-2*.x86_64*,code-3*.x86_64*,code-4*.x86_64*,code-5*.x86_64*,code-6*.x86_64*,code-7*.x86_64*,code-8*.x86_64*,code-9*.x86_64*
+

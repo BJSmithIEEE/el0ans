@@ -1,0 +1,24 @@
+#
+#	/etc/yum.repos.d/REPO_TPS7-SForge.repo
+#	REPO Server repos for Sourceforge
+#	(SKIP!!! *NOT* FIPS Compatible RHEL8+!!!)
+#
+
+# SKIP # [LIMITED-turbovnc]
+# SKIP # enabled=0
+# SKIP # countme=0
+# SKIP # name=REPO Server - TurboVNC for EL 7
+# SKIP # #excludepkgs=
+# SKIP # baseurl=https://sourceforge.net/projects/turbovnc/files/
+# SKIP # gpgcheck=1
+# SKIP # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-VGL
+
+# SKIP # [LIMITED-virtualgl]
+# SKIP # enabled=0
+# SKIP # countme=0
+# SKIP # name=REPO Server - VirtualGL for EL 7 
+# SKIP # #excludepkgs=
+# SKIP # baseurl=https://sourceforge.net/projects/virtualgl/files/
+# SKIP # gpgcheck=1
+# SKIP # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-VGL
+

@@ -1,0 +1,28 @@
+#
+#       /etc/yum.repos.d/REPO_TPS-gitlab.repo
+#	REPO Server repos for GitLab
+
+[gitlab_gitlab-ce]
+enabled=0
+countme=0
+name=REPO Server - GitLab Community Edition (CE) for el$releasever - Unsupported
+#excludepkgs=
+baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/$releasever/$basearch
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-GitLab
+metadata_expire=300
+
+[gitlab_gitlab-ee]
+enabled=0
+countme=0
+name=REPO Server - GitLab Enterprise Edition (EE) for el$releasever
+#excludepkgs=
+baseurl=https://packages.gitlab.com/gitlab/gitlab-ee/el/$releasever/$basearch
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-GitLab
+metadata_expire=300
+

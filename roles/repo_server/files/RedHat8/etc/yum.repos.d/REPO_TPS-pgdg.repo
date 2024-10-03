@@ -1,0 +1,78 @@
+#
+#       /etc/yum.repos.d/REPO_TPS-pgdg.repo
+#       REPO Server repos for PostgreSQL Global Development Group (PGDG) 
+#
+
+[pgdg_pgdg-common]
+enabled=0
+countme=0
+name=REPO Server - PostgreSQL common RPMs for RHEL $releasever - $basearch
+#baseurl=file:///opt/softdist/yum/TPS$releasever/$basearch/pgdg_pgdg-common
+baseurl=https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-$releasever-$basearch
+gpgcheck=1
+# NO for 2024 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg_pgdg16]
+enabled=0
+countme=0
+name=REPO Server - PostgreSQL 16 for RHEL $releasever - $basearch
+#baseurl=file:///opt/softdist/yum/TPS$releasever/$basearch/pgdg_pgdg16
+baseurl=https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-$releasever-$basearch
+gpgcheck=1
+# NO for 2024 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg_pgdg15]
+enabled=0
+countme=0
+name=REPO Server - PostgreSQL 15 for RHEL $releasever - $basearch
+#baseurl=file:///opt/softdist/yum/TPS$releasever/$basearch/pgdg_pgdg15
+baseurl=https://download.postgresql.org/pub/repos/yum/15/redhat/rhel-$releasever-$basearch
+gpgcheck=1
+# NO for 2024 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg_pgdg14]
+enabled=0
+countme=0
+name=REPO Server - PostgreSQL 14 for RHEL $releasever - $basearch
+#baseurl=file:///opt/softdist/yum/TPS$releasever/$basearch/pgdg_pgdg14
+baseurl=https://download.postgresql.org/pub/repos/yum/14/redhat/rhel-$releasever-$basearch
+gpgcheck=1
+# NO for 2024 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg_pgdg13]
+enabled=0
+countme=0
+name=REPO Server - PostgreSQL 13 for RHEL $releasever - $basearch
+#baseurl=file:///opt/softdist/yum/TPS$releasever/$basearch/pgdg_pgdg13
+baseurl=https://download.postgresql.org/pub/repos/yum/13/redhat/rhel-$releasever-$basearch
+gpgcheck=1
+# NO for 2024 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg_pgdg12]
+enabled=0
+countme=0
+name=REPO Server - PostgreSQL 12 for RHEL $releasever - $basearch
+#baseurl=file:///opt/softdist/yum/TPS$releasever/$basearch/pgdg_pgdg12
+baseurl=https://download.postgresql.org/pub/repos/yum/12/redhat/rhel-$releasever-$basearch
+gpgcheck=1
+# NO for 2024 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg_pgdg11]
+enabled=0
+countme=0
+name=REPO Server - PostgreSQL 11 for RHEL $releasever - $basearch
+#baseurl=file:///opt/softdist/yum/TPS$releasever/$basearch/pgdg_pgdg11
+baseurl=https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-$releasever-$basearch
+gpgcheck=1
+# NO for 2024 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+[pgdg_pgdg10]
+enabled=0
+countme=0
+name=REPO Server - PostgreSQL 10 for RHEL $releasever - $basearch
+#baseurl=file:///opt/softdist/yum/TPS$releasever/$basearch/pgdg_pgdg10
+baseurl=https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-$releasever-$basearch
+gpgcheck=1
+# NO for 2024 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+
+

@@ -1,0 +1,16 @@
+#	Read-only
+/storage/opt					127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/_rpm-gpg			127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/EPEL7		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/EPEL9		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+#	Read-write
+/storage/softdist/yum/.staging/CUDA7  		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/CUDA9		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/RedHat7wks   	127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/RedHat7 		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/RedHat9 		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/TPS7		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/TPS9    		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/.log    		127.0.0.1/255.0.0.0(sync,ro,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+/storage/softdist/yum/.staging/.validation    127.0.0.1/255.0.0.0(sync,rw,insecure,insecure_locks) 192.168.123.0/255.255.255.0(sync,ro,insecure,insecure_locks)
+

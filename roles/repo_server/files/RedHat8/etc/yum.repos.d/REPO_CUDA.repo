@@ -1,0 +1,14 @@
+#
+#	/etc/yum.repos.d/REPO_CUDA.repo
+#       REPO Server repos for nVidia CUDA
+#
+
+[nvidia_cuda]
+enabled=0
+countme=0
+name=REPO Server - nVidia CUDA for EL $releasever
+#excludepkgs=
+baseurl=https://developer.download.nvidia.com/compute/cuda/repos/rhel$releasever/$basearch
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-nVidia-$releasever
+
