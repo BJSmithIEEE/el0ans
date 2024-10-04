@@ -1,0 +1,80 @@
+#!/bin/bash
+
+#	softDist.func - Software Distibution Globals and Functions
+
+
+#####	GLOBALS
+
+### CONSTANTS
+
+# Minimum EL still being downloaded - used when IHV/ISV RPMs are not version dependent
+minEl=7
+#minEl=8
+
+# Root Directory of software distribution
+myRoot="/storage/softdist"
+
+# Mirrors for EPEL / RPM Fusion
+myEArc=mirror.math.princeton.edu/pub/fedora-archive/epel
+myEpel=mirror.math.princeton.edu/pub/epel
+myRFus=mirror.math.princeton.edu/pub/rpmfusion
+
+### PACKAGE VERSION-SPECIFIC
+
+# GitLab Releases
+vGitLab="15.6.8 15.7.9 15.8.6 15.9.8 15.10.8 15.11.13 \
+	16.0.10 16.1.8 16.2.11 16.3.9 16.4.7 16.5.10 16.6.10 16.7.10 16.8.10 16.9.11 16.10.10 16.11.10"
+
+### FULL CHANNELS
+
+# TPS Channels
+cTPS9="microsoft_powershell"
+cTPS8="microsoft_powershell microsoft_vscode"
+cTPS8="microsoft_powershell microsoft_vscode"
+cTPS7="microsoft_powershell microsoft_vscode"
+
+# CUDA Channels
+cCUDA9="nvidia_cuda"
+cCUDA8="nvidia_cuda"
+cCUDA7="nvidia_cuda"
+
+# Red Hat (these should probably be a hash)
+cRedHat9="rhel-9-for-x86_64-baseos-rpms rhel-9-for-x86_64-appstream-rpms rhel-9-for-x86_64-supplementary-rpms codeready-builder-for-rhel-9-x86_64-rpms"
+cRedHat8="ansible-2.9-for-rhel-8-x86_64-rpms codeready-builder-for-rhel-8-x86_64-rpms rhel-8-for-x86_64-appstream-rpms rhel-8-for-x86_64-baseos-rpms rhel-8-for-x86_64-supplementary-rpms"
+# SKIP dotNET # cRedHat7="rhel-7-server-rh-common-rpms rhel-7-server-optional-rpms rhel-server-rhscl-7-rpms rhel-7-server-devtools-rpms rhel-7-server-dotnet-rpms rhel-7-server-rpms rhel-7-server-supplementary-rpms rhel-7-server-extras-rpms rhel-7-server-ansible-2.9-rpms"
+cRedHat7="rhel-7-server-rh-common-rpms rhel-7-server-optional-rpms rhel-server-rhscl-7-rpms rhel-7-server-devtools-rpms rhel-7-server-rpms rhel-7-server-supplementary-rpms rhel-7-server-extras-rpms rhel-7-server-ansible-2.9-rpms"
+# SKIP dotNet # cRedHat7wks="rhel-7-workstation-rh-common-rpms rhel-7-workstation-optional-rpms rhel-workstation-rhscl-7-rpms rhel-7-workstation-devtools-rpms rhel-7-workstation-dotnet-rpms rhel-7-workstation-rpms rhel-7-workstation-supplementary-rpms rhel-7-workstation-extras-rpms"
+cRedHat7wks="rhel-7-workstation-rh-common-rpms rhel-7-workstation-optional-rpms rhel-workstation-rhscl-7-rpms rhel-7-workstation-devtools-rpms rhel-7-workstation-rpms rhel-7-workstation-supplementary-rpms rhel-7-workstation-extras-rpms"
+
+
+### DISTRIBUTION
+
+# Read system-release-cpe for Vendor, Release and Product (7 and earlier)
+myV="$(cat /etc/system-release-cpe 2>> /dev/null | awk -F: '{ print $3 }' 2>> /dev/null)"
+myR="$(cat /etc/system-release-cpe 2>> /dev/null | awk -F: '{ print $5 }' 2>> /dev/null)"
+myP="$(cat /etc/system-release-cpe 2>> /dev/null | awk -F: '{ print $7 }' 2>> /dev/null)"
+
+# If name is not redhat, exit
+[ "${myV}" != "redhat" ] && echo -e "\nOnly for RHEL distributions\n" && exit 64
+
+# Chop off any trailing dot version and, if workstation, append 'wks' to release
+myR0="$(echo ${myR} | sed -e 's/[.][0-9]*$//g' 2>> /dev/null)"
+[ "${myP}" == "workstation" ] && myR0="${myR0}wks"
+
+
+### INTERNAL
+
+# Date variables
+myDs="$(date +%s)"				# Seconds since Epoch (ssssssss)
+myDd="$(date +%d)"				# Day of Month (dd)
+myDyb="$(date +%Y%b)"				# YYYYBbbormat
+myDybd="$(date +%Y%b)${myDd}"			# YYYYBbbdd format
+myDym="$(date +%Y-%m)"				# YYYY-mm format
+myDymd="$(date +%Y-%m)-${myDd}"			# YYYY-mm-dd format
+myDsymd="${myDs}_$(date +%Y%b)${myDd}"		# sssssssss_YYYYBbbdd format
+
+
+# Set umask so group is writable
+umask 002
+
+
