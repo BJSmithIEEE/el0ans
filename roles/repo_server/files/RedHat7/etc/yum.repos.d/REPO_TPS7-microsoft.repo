@@ -8,9 +8,9 @@
 #	      Some packages are EL-release specific, others are not, and built generically for EL7+
 #	      Some packages (e.g., Edge) will *NOT* work airgap/off-line, and *BREAKS* YUM/DNF - do *NOT* use airgap/off-line!!!
 #	  - Location of software in Microsoft YUM Repos:
-#	       MS Edge (7+):	https://packages.microsoft.com/yumrepos/edge
-#	       Powershell:	https://packages.microsoft.com/rhel/7/prod
-#              VS Code (7+):	https://packages.microsoft.com/yumrepos/vscode
+#	       *AVOID* MS Edge (7+):	https://packages.microsoft.com/yumrepos/edge
+#	       Powershell (by release):	https://packages.microsoft.com/rhel/7/prod
+#              VS Code (.disttag.):     https://packages.microsoft.com/yumrepos/vscode
 
 #####
 #####	Microsoft Edge

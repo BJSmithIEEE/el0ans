@@ -7,10 +7,10 @@
 #	      Use 'includepkgs=' to limit packages/versions 
 #	      Some packages are EL-release specific, others are not, and built generically for EL7+
 #	      Some packages (e.g., Edge) will *NOT* work airgap/off-line, and *BREAKS* YUM/DNF - do *NOT* use airgap/off-line!!!
-#	  - Location of software in Microsoft YUM Repos:
-#	       MS Edge (7+):	https://packages.microsoft.com/yumrepos/edge
-#	       Powershell:	https://packages.microsoft.com/rhel/$releasever/prod
-#              VS Code (7+):	https://packages.microsoft.com/yumrepos/vscode
+#         - Location of software in Microsoft YUM Repos:
+#              *AVOID* MS Edge (7+):    https://packages.microsoft.com/yumrepos/edge
+#              Powershell (by release): https://packages.microsoft.com/rhel/7/prod
+#              VS Code (.disttag.):     https://packages.microsoft.com/yumrepos/vscode
 
 #####
 #####	Microsoft Edge
@@ -50,5 +50,5 @@ gpgcheck=1
 gpgkey=/etc/pki/rpm-gpg/RPM-GPG-KEY-Microsoft
 name=REPO Server - $basearch - TPS$releasever - Microsoft - Visual Studio Code
 # includepkgs - only allow these packages
-includepkgs=code-0*.x86_64*,code-1*.x86_64*,code-2*.x86_64*,code-3*.x86_64*,code-4*.x86_64*,code-5*.x86_64*,code-6*.x86_64*,code-7*.x86_64*,code-8*.x86_64*,code-9*.x86_64*
+includepkgs=code-0*.el$releasever.x86_64*,code-1*.el$releasever.x86_64*,code-2*.el$releasever.x86_64*,code-3*.el$releasever.x86_64*,code-4*.el$releasever.x86_64*,code-5*.el$releasever.x86_64*,code-6*.el$releasever.x86_64*,code-7*.el$releasever.x86_64*,code-8*.el$releasever.x86_64*,code-9*.el$releasever.x86_64*
 
