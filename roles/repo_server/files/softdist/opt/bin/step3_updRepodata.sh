@@ -30,10 +30,10 @@ mySyntax() {
 		echo -e "\t-----------------\t--------------------------------------------------"
 		cd "${myRoot}/yum/.staging/"
                 for d in [A-Za-z]* ; do
-                        myOut="$(/usr/bin/find ./${d} -xdev -type f -name repomd.xml -print 2>> /dev/null | sed -e 's,/repodata/repomd.xml,,g' 2>> /dev/null | sort -u 2>> /dev/null)"
+                        myOut="$(/usr/bin/find ./${d}/ -xdev -type f -name repomd.xml -print 2>> /dev/null | sed -e 's,/repodata/repomd.xml,,g' 2>> /dev/null | sort -u 2>> /dev/null)"
                         if [ "${myOut}" != "" ] ; then
                 		echo -e "[${d}]   \tSTAG  (${myRoot}/yum/.staging/)"
-                                /usr/bin/find ./${d} -xdev -type f -name repomd.xml -printf "\t%TY-%Tm-%Td  %TH:%TM\t%p\n" | sed -e 's,/repodata/repomd.xml,,g' | sort -u
+                                /usr/bin/find ./${d}/ -xdev -type f -name repomd.xml -printf "\t%TY-%Tm-%Td  %TH:%TM\t%p\n" | sed -e 's,/repodata/repomd.xml,,g' | sort -u
                                 echo -e "\t-----------------\t--------------------------------------------------"
                         fi
                 done
@@ -48,10 +48,10 @@ mySyntax() {
 	echo -e "\t-----------------\t--------------------------------------------------"
         cd "${myRoot}/yum/.staging"
         for d in [A-Za-z]*${myR0} ; do
-                myOut="$(/usr/bin/find ./${d} -xdev -type f -name repomd.xml -print 2>> /dev/null | sed -e 's,/repodata/repomd.xml,,g' 2>> /dev/null | sort -u 2>> /dev/null)"
+                myOut="$(/usr/bin/find ./${d}/ -xdev -type f -name repomd.xml -print 2>> /dev/null | sed -e 's,/repodata/repomd.xml,,g' 2>> /dev/null | sort -u 2>> /dev/null)"
                 if [ "${myOut}" != "" ] ; then
                         echo -e "[${d}]   \tSTAG  (${myRoot}/yum/.staging/)"
-                        /usr/bin/find ./${d} -xdev -type f -name repomd.xml -printf "\t%TY-%Tm-%Td  %TH:%TM\t%p\n" | sed -e 's,/repodata/repomd.xml,,g' | sort -u
+                        /usr/bin/find ./${d}/ -xdev -type f -name repomd.xml -printf "\t%TY-%Tm-%Td  %TH:%TM\t%p\n" | sed -e 's,/repodata/repomd.xml,,g' | sort -u
                         echo -e "\t-----------------\t--------------------------------------------------"
                 fi
         done

@@ -63,7 +63,7 @@ for b in ${myBas} ; do
 		if [ ${myBasChk} -gt 0 ] ; then
 			# Run validation
 			echo -e "\nValidating all RPM digests/signatures for ${s} ..." | tee "${myRoot}/yum/.staging/.validation/sig_${myDym}/rpm-checkgpg_${b}-${myDsymd}.txt"
-			/usr/bin/find "${b}" -mount -type f -name '*[.]rpm' -exec rpm --checksig {} \; | tee "${myRoot}/yum/.staging/.validation/sig_${myDym}/rpm-checkgpg_${b}-${myDsymd}.txt"
+			/usr/bin/find "${b}/" -mount -type f -name '*[.]rpm' -exec rpm --checksig {} \; | tee "${myRoot}/yum/.staging/.validation/sig_${myDym}/rpm-checkgpg_${b}-${myDsymd}.txt"
 			echo -e "\n${b} listing:  ${myRoot}/yum/.staging/.validation/sig_${myDym}/rpm-checkgpg_${b}-${myDsymd}.txt" | tee -a ${myRoot}/yum/.staging/.log/staging_validation-${myR0}_${myDsymd}.log
 		else
 			echo -e "\nPassed directory (${b}) is not valid for RedHat${myR0}\n" | tee -a ${myRoot}/yum/.staging/.log/staging_validation-${myR0}_${myDsymd}.log
