@@ -8,17 +8,19 @@
 # SKIP # enabled=0
 # SKIP # countme=0
 # SKIP # name=REPO Server - TurboVNC for EL 7
-# SKIP # #excludepkgs=
 # SKIP # baseurl=https://sourceforge.net/projects/turbovnc/files/
 # SKIP # gpgcheck=1
 # SKIP # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-VGL
+# SKIP # #includepkgs=
+# SKIP # #exclude=
 
 # SKIP # [LIMITED-virtualgl]
 # SKIP # enabled=0
 # SKIP # countme=0
 # SKIP # name=REPO Server - VirtualGL for EL 7 
-# SKIP # #excludepkgs=
 # SKIP # baseurl=https://sourceforge.net/projects/virtualgl/files/
 # SKIP # gpgcheck=1
 # SKIP # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-VGL
+# SKIP # #includepkgs=
+# SKIP # #exclude=
 

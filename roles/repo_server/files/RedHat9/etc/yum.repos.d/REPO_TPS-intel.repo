@@ -5,6 +5,7 @@
 #	TPS Intel considerations:
 #	  - HUGE Repo
 #	      Use 'includepkgs=' to limit packages/versions 
+#	      Use 'exclude=' to limit packages/versions (e.g., intel-oneapi-intelfpga* are huge)
 #	  - Location of software in Intel YUM Repos:
 #	       Intel oneAPI:	https://yum.repos.intel.com/oneapi
 
@@ -21,4 +22,6 @@ gpgkey=file:///etc/pki/rpm-gpg/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
 name=Intel oneAPI repository
 # includepkgs - only allow these packages
 # includepkgs=
+# excludepkgs - allow all but these packages
+exclude=intel-oneapi-intelfpga*
 
