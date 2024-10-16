@@ -96,6 +96,7 @@ fi
 ###	Step 0c:  Move repodata directory into old repo tree (or remove if already exists)
 if [ ${myMv} -ne 0 ] ; then
 	echo -e "\nMove all repodata directories from PROD to old repo tree(${myRoot}/.old/yum_${parmDym}) ..."
+	echo -e "\t(*IGNORE* any warnings 'find: No such file or directory')"
 	cd "${myRoot}/yum/"
 	for d in [A-Za-z]* ; do
 		find "${d}/" -xdev -type d -name repodata -exec mv '{}' './.old/yum-last/{}' \;
@@ -127,7 +128,7 @@ done
 cd ${myCwd}
 
 ###	Step 1c:  Copy repodata directories from Staging into PROD repo tree
-echo -e "\nCopy all repodata directories from Staging to PROD repo tree(${myRoot}/.old/yum_${parmDym}) ..."
+echo -e "\nCopy all repodata directories from Staging to PROD repo tree(${myRoot}/yum/) ..."
 cd "${myRoot}/yum/.staging/"
 for d in [A-Za-z]* ; do
 	find "${d}/" -xdev -type d -name repodata -exec cp -a '{}' '../{}' \;
