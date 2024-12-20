@@ -1,0 +1,16 @@
+
+- name: systemd_reload
+  become: yes
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: yes
+    enabled: yes
+    masked:  no
+  with_items:
+    - sysstat-collect.timer
+  ignore_errors: yes
+  when:
+    - ansible_kernel.find('Microsoft') == -1
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version|int >= 8
+

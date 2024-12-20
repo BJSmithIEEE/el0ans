@@ -1,0 +1,4 @@
+# Run system activity accounting tool every 2 minutes
+[Timer]
+OnCalendar=*:00/2
+
