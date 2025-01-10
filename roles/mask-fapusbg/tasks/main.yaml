@@ -1,0 +1,34 @@
+---
+#
+#       ./roles/mask-fapusbg/tasks/main.yml
+#       Ensure fapolicyd/usbguard are Masked (as well as Disabled/Stopped too)
+#
+
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }}) /// myCommit({{ myCommit | default('') }})"
+
+- name: End play on host if Production is True and Commit is not defined
+  meta: end_host
+  when: myProd is defined and myProd|bool == true and myCommit is not defined
+
+- name: End play if not CentOS/RHEL
+  meta: end_host
+  when: ansible_os_family != "RedHat"
+
+- name: Mask Troublesome Services By Default (so system will boot/be accessible)
+  become: yes
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: no
+    enabled: no
+    masked:  yes      # Prevent it from starting for any dependency or check
+    state:  stopped   # Ensure it's not running right now either
+  with_items:
+    - fapolicyd
+    - usbguard
+  ignore_errors: yes
+  when:
+   - ansible_os_family == "RedHat"
+   - ansible_kernel.find('Microsoft') == -1
+   - ansible_distribution_major_version|int >= 7
+
