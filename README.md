@@ -9,7 +9,7 @@ The following table lists Ansible roles provided in this repository.
 
 | role | calling playbook(s) | purpose | notes |
 | --------:|:--------------:|:------------------------------------ |:--------------------------------- |
-| [snmp](./roles/snmp/) | *none* (i.e., use [single-role](./single-role.yaml)) | install and configure `net-snmp` for SNMPv3 read-only (**no** SNMP1/2c) to a DISA STIG compliant configuration | RHEL8+ (net-snmp 5.8+) will utilized AES256/SHA-512 for RHEL8+ (RHEL6/7 only does AES128/SHA1 aka SHA-192) |
+| [snmp](./roles/snmp/) | *none* (i.e., use [single-role](./single-role.yaml)) | install and configure `net-snmp` for SNMPv3 read-only (**no** SNMP1/2c) to a DISA STIG compliant configuration | RHEL8+ (net-snmp 5.8+) will utilized AES256/SHA-512 for RHEL8+ (RHEL6/7 only does AES128/SHA1 aka SHA-160) |
 
 > **IMPORTANT:**  By default, the roles assume `become=false`, and use the `become: true` in individual or blocks of tasks where privilege escalation is required.  See [Ansible Configuration Example](#ansible-configuration-example) for more information.
 
