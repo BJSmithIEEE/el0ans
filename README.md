@@ -9,6 +9,7 @@ The following table lists Ansible roles provided in this repository.
 
 | role | calling playbook(s) | purpose | notes |
 | --------:|:--------------:|:------------------------------------ |:--------------------------------- |
+| [nvidia](./roles/nvidia/) | [system-update](./system-update.yaml) | DNF (RHEL8+) managed nVidia Driver release and CUDA version(s), uses [nVidia CUDA YUM repositories](https://developer.download.nvidia.com/compute/cuda/repos/) | RHEL8+ only (tasks largely skipped on RHEL7, use tarball installer), called `prior` to using DNF to update the system, sets/updates Driver and CUDA, which may be overridden by inventory variables (e.g., `myNDvr` & `myCUDA`) |
 | [snmp](./roles/snmp/) | *none* (i.e., use [single-role](./single-role.yaml)) | install and configure `net-snmp` for SNMPv3 read-only (**no** SNMP1/2c) to a DISA STIG compliant configuration | RHEL8+ (net-snmp 5.8+) will utilized AES256/SHA-512 for RHEL8+ (RHEL6/7 only does AES128/SHA1 aka SHA-160) |
 
 > **IMPORTANT:**  By default, the roles assume `become=false`, and use the `become: true` in individual or blocks of tasks where privilege escalation is required.  See [Ansible Configuration Example](#ansible-configuration-example) for more information.
@@ -23,6 +24,7 @@ The following Ansible playbooks are pre-included, and are detailed in the follow
 | playbook | roles | purpose |
 | --------:|:-------------------:|:------------------------------------ |
 | [single-role](./single-role.yaml) | *any* (passed w/`--extra-var role=`*XXX*) | Run a single Ansbile role passed along as an extra variable -- e.g., `--extra-vars 'role=`*role*`'` |
+| [system-update](./system-update.yaml) | `nvidia` `update` | Update a system, including optional (RHEL8+) nVidia Driver/CUDA management (if `myGpu=nvidia`) |
 
 > **WARNING:**  It is strongly recommended to only use `myCommit=true` when `--limit` is used, naming specific systems, when the inventory has production systems using the variable `myProd=true`.  See section [Ansible Inventory Variables](#ansible-inventory-variables)
 
@@ -39,11 +41,13 @@ ansible-playbook single-role.yaml --extra-vars "role=XXX [myCommmit=True]" --lim
 
 No default Ansible Inventory (`inventory`) file is provided.  However, the following variables are used as conditionals in various Ansible roles, if defined in the inventory file.
 
-| variable | default | notes |
-| --------:|:---------:| ------------------------------------ |
-| `myGpu`  | *undefined* or `nvidia` | will not trigger GPU-specific tasks unless set |
-| `myProd` | *undefined* or `true`   | roles will not modify system or complete blocks of tasks if `myProd=true` unless `myCommit=true` is passed on command line |
-| `myRole` | *varies* | This is the role of the system (`myRole=yum`), and should not be confused **not** the Ansible role(s) (`role=...`) |
+| variable | type | default | Examples | notes |
+| --------:|:----:|:---------:|:-------------:| ------------------------------------ |
+| `myCuda` | array[str] | *undefined* | `[ "cuda-11-4.x86_64" ]` `[ "cuda-11-8.x86_64", "cuda-12-4.x86_64" ]` | unless explicitly set, if `myGpu=nvidia`, uses [default nVidia CUDA release(s)](./roles/nvidia/defaults/main.yaml) | 
+| `myGpu`  | string | *undefined* | `nvidia` | will not trigger GPU-specific tasks unless set |
+| `myNDvr` | string | *undefined* | `470-dkms` `550-dkms` `570-open` | unless explicitly set, if `myGpu=nvidia`, uses [default nVidia driver release](./roles/nvidia/defaults/main.yaml) | 
+| `myProd` | boolean | *varies* (usually in `[group:vars]`) | `false` `true`  | roles will not modify system or complete blocks of tasks if `myProd=true,` **unless** `myCommit=true` is also set (e.g., passed on the command line via `--extra-vars="myCommit=true"`) |
+| `myRole` | string | *varies* (usually in `[group:vars]`) | `git` `yum` | Role of the system (`myRole=yum`), and should not be confused **not** the Ansible role(s) (`role=...`) of the playbook |
 
 This is in addition to the built-in defaults/variables, such as the `ansible_ssh_user` that may also be defined by default or passed (see [Ansible Configuration Example](#ansible-configuration-example)).
 
