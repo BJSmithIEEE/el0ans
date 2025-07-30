@@ -39,7 +39,7 @@ ansible-playbook single-role.yaml --extra-vars "role=XXX [myCommmit=True]" --lim
 
 ## Ansible Inventory Variables
 
-No default Ansible Inventory (`inventory`) file is provided.  However, the following variables are used as conditionals in various Ansible roles, if defined in the inventory file.
+No default Ansible Inventory file (`inventory`) is provided, just an [Example Inventory file](./inventory_example).  Please provide your own, or copy this and modify for your environment, as the default filename (typically just `inventory`).  The following variables often have defaults in various Ansible roles, if not the inventory group vars, if defined in the inventory file, and may overriden.
 
 | variable | type | default | Examples | notes |
 | --------:|:----:|:---------:|:-------------:| ------------------------------------ |
@@ -54,7 +54,7 @@ This is in addition to the built-in defaults/variables, such as the `ansible_ssh
 
 ## Ansible Configuration Example
 
-An example Ansible configuration file ([ansible.cfg](./ansible.cfg_example)) has been provided.  Please provide your own, or copy this and modify for your environment, as the default filename (typically `ansible.cfg`).
+No default Ansible Configuration file (`ansible.cfg`) is provided, just an [Example Ansible configuration file](./ansible.cfg_example).  Please provide your own, or copy this and modify for your environment, as the default filename (typically `ansible.cfg`).  The following variables often have defaults, and modify as appropriate.
 
 | variable          | default | notes |
 | -----------------:|:----------:|:---------------------------------------------------------------------------------------------------- |
