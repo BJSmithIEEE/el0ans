@@ -1,0 +1,36 @@
+#
+#	el0ans/inventory_example
+#
+
+
+############################################
+#####	PROD (Production Systems)
+############################################
+
+###	PROD_desk (Production Desktops)
+[PROD_desk]
+
+Desk8igp
+Desk8oldGpu						myGpu=nvidia myNDvr="470-dkms" myCuda="cuda-11-4.x86_64"
+Desk9gpu		ansible_ssh_user=otheradm	myGpu=nvidia
+
+[PROD_desk:vars]
+ansible_ssh_user=ansadmin
+myProd=true
+myRole=desk
+
+
+############################################
+#####	TEST (Test Systems)
+############################################
+
+###	TEST_desk (TEST Desktops)
+[PROD_desk]
+
+Desk9test						myGpu=nvidia
+
+[PROD_desk:vars]
+ansible_ssh_user=test9adm
+myProd=false
+myRole=desk
+

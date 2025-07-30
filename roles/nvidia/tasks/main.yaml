@@ -1,0 +1,274 @@
+---
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myprod({{ myprod | default ('') }}) /// myrole({{ myrole | default('') }}) /// mycommit({{ mycommit | default('') }}) /// myGpu({{ myGpu | default('') }})"
+
+- name: End play if not CentOS/RHEL
+  meta: end_host
+  when: ansible_os_family != "RedHat"
+
+- name: End play on host if Production is True and Commit is not defined
+  meta: end_host
+  when: myprod is defined and myprod|bool == true and mycommit is not defined
+
+
+###     Set Facts -- defaults overridden by inventory variables
+
+# mySWel = defSWel[789] hash of variables and arrays
+- name: Set software facts for Ansible Distribution Major Version
+  set_fact:
+    mySWel:  "{{ lookup('vars', 'defSWel' + ansible_distribution_major_version) }}"
+  when:
+    - ansible_distribution_major_version|int >= 7
+
+# myNDvr = mySWel.nvidia_dvr
+- name: Set DataCenter certified nVidia driver module release
+  set_fact:
+    myNDvr:  "{{ mySWel.nvidia_dvr }}"
+  when:
+    - myNDvr is not defined
+    - mySWel.nvidia_dvr is defined
+
+# myCuda = mySWel.nvidia_cusa (default)
+- name: Set DataCenter certified nVidia CUDA software release
+  set_fact:
+    myCuda:  "{{ mySWel.nvidia_cuda }}"
+  when:
+    - myCuda is not defined
+    - mySWel.nvidia_cuda is defined
+
+- debug:
+    msg:  "DEBUG:  DataCenter certified nVidia driver module ({{ myNDvr | default ('') }}) and CUDA ({{ myCuda | default('') }}) for system ({{ inventory_hostname }})"
+
+
+###     Helper scripts for nVidia software
+
+- name:  nVidia helper scripts
+  block:  
+
+    - name: Ensure directory(ies) exist
+      become: yes
+      file:
+        path: "/opt/el0ans/sbin"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode:  '0755'
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "bin_t"
+
+    - name: Update /opt/el0ans/sbin/ files
+      become: yes
+      copy:
+        src:  "{{ item }}"
+        dest:  "/opt/el0ans/sbin/"
+        backup: no
+        owner: root
+        group: root
+        mode:  '0755'
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "bin_t"
+      with_fileglob:
+        - 'sbin/*'
+
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version|int >= 7
+
+
+###     DNF (RHEL8+):  Maintain nVidia Module
+
+- name:  DNF nVidia Module Management, CUDA and basic APIs/libraries (RHEL8+)
+  block:  
+    
+    ###     Set 'best=false' (--nobest) for nVidia CUDA (RHEL8+)
+    - name:  DNF Option best=false/nobest for nVidia CUDA (RHEL8+)
+      become:  yes
+      shell:
+        cmd:  "dnf config-manager --save --setopt=best=false"
+      when:  
+      - myGpu is defined and myGpu = 'nvidia'
+      - ansible_distribution_major_version|int >= 8
+
+    ###    RHEL software for nVidia dependencies
+
+    - name:  Manage RHEL nVidia dependencies (RHEL8+)
+      block:  
+    
+        - name:  Install nVidia dependencies
+          become: yes
+          yum:
+            update_cache: yes
+            download_only:  no
+            state:  present
+            name:  "{{ mySWel.nvidia_deps }}"
+            allow_downgrade:  no
+            autoremove:  no
+            disable_gpg_check:  no
+            skip_broken:  no
+            use_backend:  auto
+          async: 3600
+          poll:  0
+          register:  updateAsyncDeps
+    
+        - name: Check on dependencies installation every 10 seconds - up to 60 minutes
+          become: yes
+          async_status:  
+            jid:  "{{ updateAsyncDeps.ansible_job_id }}"
+          register: updateResultDeps
+          until:  updateResultDeps.finished
+          retries: 360
+          delay: 10
+    
+      when:  
+        - myGpu is defined and myGpu == 'nvidia'
+        - ansible_distribution_major_version|int >= 8
+    
+    
+    ###     nVidia Driver, CUDA and API Support
+    
+    - name:  Manage nVidia driver module and CUDA software (RHEL8+)
+      block:  
+    
+        - name:  Validate nVidia driver module is latest (or the latest allowed for system) DataCenter certified (RHEL8+)
+          become: yes
+          shell:  
+            cmd:  "/opt/el0ans/sbin/el0ans_nvidia-dnf-module.sh"
+            # deprecated after 2.9 # warn: false
+          register:  moduleCheck
+          changed_when:  false
+          when:
+            -  myNDvr is defined
+          ignore_errors: yes
+    
+        - name:  Get current nVidia driver module release (RHEL8+)
+          set_fact:
+            myCDvr:  "{{ moduleCheck.stdout | trim }}"
+          when:
+            - moduleCheck.stdout is defined and moduleCheck.stdout != ''
+    
+        - debug:
+            msg:  "DEBUG:  current installed nVidia driver module ({{ myCDvr | default ('') }})"
+    
+        - name:  Change nVidia driver module to latest DataCenter certified (RHEL8+)
+          block:  
+    
+            - name:  Reset nVidia driver module (RHEL8+)
+              become: yes
+              shell:
+                cmd:  "/usr/bin/dnf module -y reset nvidia-driver"
+                # deprecated after 2.9 # warn: false
+              changed_when:  false
+              register:  moduleReset
+              ignore_errors: yes
+              when:  
+                - moduleCheck.stdout is defined
+        
+            - name:  Change nVidia driver module (RHEL8+)
+              become: yes
+              ###   DNF module with name: '@nvidia-driver:XXX-dkms' does not seem to explicitly [e]nable, so ...
+              ###   we need to call 'dnf module install nvidia-driver:XXX-dmks' directly instead
+              #dnf:
+              #  update_cache: yes
+              #  # 2.11+ dnf module # nobest: false
+              #  download_only:  no
+              #  state:  present
+              #  name:  "@nvidia-driver:{{ myNDvr }}"
+              #  allow_downgrade:  yes
+              #  autoremove:  no
+              #  disable_gpg_check:  no
+              #  skip_broken:  no
+              ###   Shell command 'dnf module install' directly instead
+              shell:
+                cmd:  "/usr/bin/dnf module -y install nvidia-driver:{{ myNDvr }}"
+                # deprecated after 2.9 # warn: false
+              changed_when:  false
+              async: 3600
+              poll:  0
+              register:  moduleAsync
+        
+            - name: Check on driver module change every 10 seconds - up to 60 minutes
+              become: yes
+              async_status:  
+                jid:  "{{ moduleAsync.ansible_job_id }}"
+              register: moduleResult
+              until:  moduleResult.finished
+              retries: 360
+              delay: 10
+    
+          when:
+            - myNDvr is defined
+            - myCDvr is not defined or myCDvr != myNDvr
+    
+        - name:  Manage nVidia CUDA versions (RHEL8+)
+          block:  
+    
+            - name:  Install defined CUDA versions
+              become: yes
+              dnf:
+                # 2.11+ dnf module # nobest: false
+                download_only:  no
+                state:  present
+                name:  "{{ myCuda }}"
+                allow_downgrade:  yes
+                autoremove:  no
+                disable_gpg_check:  no
+                skip_broken:  no
+              async: 3600
+              poll:  0
+              register:  cudaAsync
+              ignore_errors: yes
+       
+            - name: Check on CUDA installation every 10 seconds - up to 60 minutes
+              become: yes
+              async_status:  
+                jid:  "{{ cudaAsync.ansible_job_id }}"
+              register: cudaResult
+              until:  cudaResult.finished
+              retries: 360
+              delay: 10
+              ignore_errors: yes
+      
+          when:
+            - myCuda is defined
+         
+        - name:  Ensure elementary API support - CUDA, OpenCL, GL/GLX and EGL/Vulkan support (RHEL8+)
+          block:  
+    
+            - name:  Ensure elementary API support - CUDA, OpenCL, GL/GLX and EGL/Vulkan support (RHEL8+)
+              become: yes
+              dnf:
+                download_only:  no
+                state:  present
+                name:  "{{ mySWel.nvidia_apis }}"
+                allow_downgrade:  yes
+                autoremove:  no
+                disable_gpg_check:  no
+                skip_broken:  no
+              async: 3600
+              poll:  0
+              register:  apisAsync
+              ignore_errors: yes
+       
+            - name: Check on elementary API validation every 10 seconds - up to 60 minutes
+              become: yes
+              async_status:  
+                jid:  "{{ apisAsync.ansible_job_id }}"
+              register: apisResult
+              until:  apisResult.finished
+              retries: 360
+              delay: 10
+              ignore_errors: yes
+      
+          when:
+            - mySWel.nvidia_apis is defined
+         
+      when:
+        - myGpu is defined and myGpu == 'nvidia'
+        - ansible_distribution_major_version|int >= 8
+
+  when: ( myProd is not defined ) or
+        ( myProd is defined and myProd|bool != true ) or
+        ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+
