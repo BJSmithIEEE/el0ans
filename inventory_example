@@ -10,8 +10,11 @@
 ###	PROD_desk (Production Desktops)
 [PROD_desk]
 
+# Desk8 has an integrated Intel GPU
 Desk8igp
+# Desk8oldGpu has an old nVidia Kepler GPU, must stay on R470 (CUDA 11.4)
 Desk8oldGpu						myGpu=nvidia myNDvr="470-dkms" myCuda="cuda-11-4.x86_64"
+# Desk9gpu has a nVidia Maxwell GPU, can use R570
 Desk9gpu		ansible_ssh_user=otheradm	myGpu=nvidia
 
 [PROD_desk:vars]
@@ -25,11 +28,12 @@ myRole=desk
 ############################################
 
 ###	TEST_desk (TEST Desktops)
-[PROD_desk]
+[TEST_desk]
 
-Desk9test						myGpu=nvidia
+# Desk9test has a nVidia Turing GPU, can use Open Source R570 driver (use same CUDA as latest)
+Desk9test						myGpu=nvidia myNDvr="570-open"
 
-[PROD_desk:vars]
+[TEST_desk:vars]
 ansible_ssh_user=test9adm
 myProd=false
 myRole=desk
