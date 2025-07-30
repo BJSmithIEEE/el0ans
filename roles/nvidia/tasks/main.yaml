@@ -6,11 +6,6 @@
   meta: end_host
   when: ansible_os_family != "RedHat"
 
-- name: End play on host if Production is True and Commit is not defined
-  meta: end_host
-  when: myprod is defined and myprod|bool == true and mycommit is not defined
-
-
 ###     Set Facts -- defaults overridden by inventory variables
 
 # mySWel = defSWel[789] hash of variables and arrays
