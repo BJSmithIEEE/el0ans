@@ -13,7 +13,7 @@
 # Desk8 has an integrated Intel GPU
 Desk8igp
 # Desk8oldGpu has an old nVidia Kepler GPU, must stay on R470 (CUDA 11.4)
-Desk8oldGpu						myGpu=nvidia myNDvr="470-dkms" myCuda="cuda-11-4.x86_64"
+Desk8oldGpu						myGpu=nvidia myNDvr="470-dkms" myCuda=[ "cuda-11-4.x86_64" ]
 # Desk9gpu has a nVidia Maxwell GPU, can use R570
 Desk9gpu		ansible_ssh_user=otheradm	myGpu=nvidia
 
