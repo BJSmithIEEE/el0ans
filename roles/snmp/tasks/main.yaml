@@ -1,23 +1,21 @@
 #
 #####   el0ans/roles/snmp/tasks/main.yaml
+#
 ---
 
-- name: End play if not RHEL family
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }}) /// myCommit({{ myCommit | default('') }})"
+
+- name: End play if not Enterprise Linux (EL) family
   meta: end_host
   when: ansible_os_family != "RedHat"
-     
-- name: End play if not RHEL release 6+
-  meta: end_host
-  when: ansible_distribution_major_version|int < 6 
 
-
-- name: only run this on non-Production systems or if Commit is explicitly passed and true for Production
+- name: only run this on non-Production systems or if Commit is explicitly passed and true for Production (EL6+)
   block:  
 
     - name: Set el0snmp facts for Ansible OS Family and Distribution Major Version
       set_fact:  
         el0snmp_famRelVer:  "{{ lookup('vars', 'el0snmp_' + ansible_os_family + ansible_distribution_major_version) }}"
-   
 
     # NOTE:  Need to check this for RHEL9
     - name: Ensure net-snmpd is installed
@@ -160,6 +158,7 @@
             - enable_restart snmpd
     
   when:
+    - ansible_distribution_major_version|int >= 6 
     - ( myProd is not defined ) or
       ( myProd is defined and myProd|bool != true ) or
       ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )

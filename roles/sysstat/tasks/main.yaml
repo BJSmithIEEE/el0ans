@@ -1,95 +1,107 @@
-- name: End play on host if Production is True and Commit is not defined
-  meta: end_host
-  when: myProd is defined and myProd|bool == true and myCommit is not defined
+#
+#####   el0ans/roles/sysstat/tasks/main.yaml
+#
+---
 
-- name: End play if not CentOS/RHEL
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }}) /// myCommit({{ myCommit | default('') }})"
+
+- name: End play if not Enterprise Linux (EL) family
   meta: end_host
   when: ansible_os_family != "RedHat"
 
-
-- name: Make sure sysstat is installed
-  become: yes
-### ignore errors in case we are running under Kickstart %post and there is no network or the system hasn't been registered yet
-  ignore_errors: yes
-  yum:
-    update_cache: yes
-    name:
-      - sysstat
-    autoremove:  no
-    disable_gpg_check:  no
-    skip_broken:  no
-    state:  present
-    use_backend:  auto
-
-
-- name:  sysstat on RHEL7 and earlier uses cron
+- name: only run this on non-Production systems or if Commit is explicitly passed and true for Production (EL6+)
   block:
 
-    - name: Ensure sysstat collect every 2 minutes (cron)
+
+    - name: Make sure sysstat is installed
       become: yes
-      replace:
-        path:  "/etc/cron{{ item }}"
-        regexp:  '^[ \t]*[*][/][0-9]+.*[ \t]+(root[ \t]+/usr/.*/sa1.*)$'
-        replace:  '*/2 * * * * \1'
-        ### Do not backup file, as backup file will be executed too
-        backup: no
-      with_items:
-        - ".d/sysstat"
+    ### ignore errors in case we are running under Kickstart %post and there is no network or the system hasn't been registered yet
+      ignore_errors: yes
+      yum:
+        update_cache: yes
+        name:
+          - sysstat
+        autoremove:  no
+        disable_gpg_check:  no
+        skip_broken:  no
+        state:  present
+        use_backend:  auto
 
-  when: ansible_distribution_major_version|int < 8
 
+    - name:  sysstat on RHEL7 and earlier uses cron
+      block:
+    
+        - name: Ensure sysstat collect every 2 minutes (cron)
+          become: yes
+          replace:
+            path:  "/etc/cron{{ item }}"
+            regexp:  '^[ \t]*[*][/][0-9]+.*[ \t]+(root[ \t]+/usr/.*/sa1.*)$'
+            replace:  '*/2 * * * * \1'
+            ### Do not backup file, as backup file will be executed too
+            backup: no
+          with_items:
+            - ".d/sysstat"
+    
+      when: ansible_distribution_major_version|int < 8
+    
 
-- name:  sysstat on RHEL8 and later uses systemd timers
-  block:
+    - name:  sysstat on RHEL8 and later uses systemd timers
+      block:
+    
+        - name: Ensure systemd override directory for sysstat exists (systemd timer)
+          become: yes
+          file:
+            path: "/etc/systemd/system/{{ item }}.d"
+            state: directory
+            owner: "root"
+            group: "root"
+            mode:  '0755'
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "systemd_unit_file_t"
+          notify:  systemd_reload
+          with_items:
+            - "sysstat-collect.timer"
+    
+        - name: Ensure systemd override file for sysstat exists (systemd timer)
+          become: yes
+          copy:
+            src:  "override.conf_{{ item }}"
+            dest: "/etc/systemd/system/{{ item }}.d/override.conf"
+            force: no
+            owner: root
+            group: root
+            mode:  '0644'
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "systemd_unit_file_t"
+          notify:  systemd_reload
+          with_items:
+            - "sysstat-collect.timer"
+    
+        - name: Ensure sysstat collects every 2 minutes (systemd timer)
+          become: yes
+          replace:
+            path:  "/etc/systemd/system/{{ item }}.d/override.conf"
+            regexp:  '^[ \t]*OnCalendar=$'
+            replace:  'OnCalendar=*:00/2'
+            owner: root
+            group: root
+            mode:  '0644'
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "systemd_unit_file_t"
+            backup: yes
+          notify:  systemd_reload
+          with_items:  
+            - "sysstat-collect.timer"
+    
+      when: ansible_distribution_major_version|int >= 8
 
-    - name: Ensure systemd override directory for sysstat exists (systemd timer)
-      become: yes
-      file:
-        path: "/etc/systemd/system/{{ item }}.d"
-        state: directory
-        owner: "root"
-        group: "root"
-        mode:  '0755'
-        seuser: "system_u"
-        serole: "object_r"
-        setype: "systemd_unit_file_t"
-      notify:  systemd_reload
-      with_items:
-        - "sysstat-collect.timer"
-
-    - name: Ensure systemd override file for sysstat exists (systemd timer)
-      become: yes
-      copy:
-        src:  "override.conf_{{ item }}"
-        dest: "/etc/systemd/system/{{ item }}.d/override.conf"
-        force: no
-        owner: root
-        group: root
-        mode:  '0644'
-        seuser: "system_u"
-        serole: "object_r"
-        setype: "systemd_unit_file_t"
-      notify:  systemd_reload
-      with_items:
-        - "sysstat-collect.timer"
-
-    - name: Ensure sysstat collects every 2 minutes (systemd timer)
-      become: yes
-      replace:
-        path:  "/etc/systemd/system/{{ item }}.d/override.conf"
-        regexp:  '^[ \t]*OnCalendar=$'
-        replace:  'OnCalendar=*:00/2'
-        owner: root
-        group: root
-        mode:  '0644'
-        seuser: "system_u"
-        serole: "object_r"
-        setype: "systemd_unit_file_t"
-        backup: yes
-      notify:  systemd_reload
-      with_items:  
-        - "sysstat-collect.timer"
-
-  when: ansible_distribution_major_version|int >= 8
-
+  when:
+    - ansible_distribution_major_version|int >= 6
+    - ( myProd is not defined ) or
+      ( myProd is defined and myProd|bool != true ) or
+      ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
 
