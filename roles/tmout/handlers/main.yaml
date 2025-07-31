@@ -1,0 +1,34 @@
+--- 
+#
+#       roles/tmout/handlers/main.yaml
+#
+
+
+# Restart sshd
+- name: Restart sshd
+  ignore_errors: yes
+  become: yes
+  systemd:
+    name:  sshd
+    scope: system
+    state: restarted
+    daemon-reload: yes
+    enabled: yes
+    masked:  no
+  when:
+    - ansible_kernel.find('Microsoft') == -1
+ 
+# Restart systemd-logind
+- name: Restart systemd-logind
+  ignore_errors: yes
+  become: yes
+  systemd:
+    name:  sshd
+    scope: system
+    state: restarted
+    daemon-reload: yes
+    enabled: yes
+    masked:  no
+  when:
+    - ansible_kernel.find('Microsoft') == -1
+ 

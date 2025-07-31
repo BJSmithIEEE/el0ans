@@ -1,0 +1,66 @@
+---
+#
+#####   roles/tmout/tasks/main.yaml
+#
+
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }}) /// myCommit({{ myCommit | default('') }})"
+
+- name: End play if not Enterprise Linux (EL) family
+  meta: end_host
+  when: ansible_os_family != "RedHat"
+
+- name: Execute only on Non-production systems or all systems if Commit IS explicitly psased
+  block:  
+
+    - name:  TMOUT value (EL7+)
+      become: yes
+      ignore_errors: yes
+      replace:
+        path:  /etc/profile.d/tmout.sh
+        regexp:  '^\s*(TMOUT\s*=.*)$'
+        replace: '# DISABLED by Ansible role(tmout) # \1'
+        backup: no
+      when: ansible_distribution_major_version|int >= 7
+
+    - name:  SSH ClientAliveCountMax (EL7+)
+      become: yes
+      ignore_errors: yes
+      lineinfile:
+        path:  /etc/ssh/sshd_config
+        insertafter:  EOF
+        regexp: '^\s*ClientAliveCountMax\s+.*$'
+        line:   'ClientAliveCountMax 3'
+        state:  present
+        backup: yes
+      when: ansible_distribution_major_version|int >= 7
+      notify: Restart sshd
+
+    - name:  SSH ClientAliveInterval (EL7+)
+      become: yes
+      ignore_errors: yes
+      lineinfile:
+        path:  /etc/ssh/sshd_config
+        insertafter:  EOF
+        regexp: '^\s*ClientAliveInterval\s+.*$'
+        line:   'ClientAliveInterval 0'
+        state:  present
+        backup: yes
+      when: ansible_distribution_major_version|int >= 7
+      notify: Restart sshd
+
+    - name:  systemd-logind idle session kill (EL8+)
+      become: yes
+      ignore_errors: yes
+      replace:
+        path:  /etc/systemd/logind.conf
+        regexp:  '^\s*(StopIdelSessionSec\s*=.*)$'
+        replace: '# DISABLED by Ansible role(tmout) # \1'
+        backup: no
+      when: ansible_distribution_major_version|int >= 8
+      notify: Restart systemd-logind
+
+  when: ( myProd is not defined ) or
+        ( myProd is defined and myProd|bool != true ) or
+        ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+
