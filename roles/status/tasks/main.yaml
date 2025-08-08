@@ -1,0 +1,150 @@
+---
+#
+#       ./el0ans_status/tasks/main.yaml
+#
+
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }})"
+
+- name: End play if not Enterprise Linux (EL) family
+  meta: end_host
+  when: ansible_os_family != "RedHat"
+
+
+# set username+timestamp
+- set_fact:
+    myStamp:  "{{ ansible_user_id }}-{{ ansible_date_time.iso8601_basic_short }}"
+
+
+# privileged operation(s) - create/update director(ies)/script(s)
+- name: Update script(s)
+  become: true
+  block:  
+
+    - name: Ensure directory(ies) exist
+      ansible.builtin.file:
+        path: "/opt/el0ans/{{ item }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode:  '0755'
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "bin_t"
+      with_items:
+        - 'bin'
+
+    - name: Update unprivileged scripts
+      become: yes
+      ansible.builtin.copy:
+        src:  "{{ item }}"
+        dest:  "/opt/el0ans/bin/"
+        backup: no
+        owner: root
+        group: root
+        mode:  '0755'
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "bin_t"
+      with_fileglob:
+        - 'bin/*'
+
+  when:
+    - ansible_distribution_major_version|int >= 7
+    - ( myProd is not defined ) or
+      ( myProd is defined and myProd|bool != true ) or
+      ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+
+# unprivileged operations - run script(s)
+- name: Run script(s)
+  become: false
+  block:
+
+    - name: Run status script(s)
+      ansible.builtin.shell:  
+        cmd:  "/opt/el0ans/bin/{{ item }} >> /dev/shm/{{ item }}_{{ myStamp }}.csv"
+      with_items:
+        - 'el0ans-stat0csv'
+      
+    - name: Fetch output(s)
+      ansible.builtin.shell:
+        dest: "/dev/shm/{{ item }}_{{ myStamp }}/{{ item }}_{{ myStamp }}_{{ inventory_hostname }}.csv"
+        src:  "/dev/shm/{{ item }}_{{ myStamp }}.csv"
+      with_items:  
+        - 'el0ans-stat0csv'
+
+  when:
+    - ansible_distribution_major_version|int >= 7
+
+# local operations (privileged)- create/update director(ies)/script(s)
+- name: Update script(s)
+  become: true
+  block:  
+
+    - name: Ensure directory(ies) exist
+      ansible.builtin.file:
+        path: "/opt/el0ans/{{ item }}"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode:  '0755'
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "bin_t"
+      with_items:
+        - 'bin'
+
+    - name: Update unprivileged scripts
+      become: yes
+      ansible.builtin.copy:
+        src:  "{{ item }}"
+        dest:  "/opt/el0ans/bin/"
+        backup: no
+        owner: root
+        group: root
+        mode:  '0755'
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "bin_t"
+      with_fileglob:
+        - 'bin/*'
+
+  when:
+    - ansible_distribution_major_version|int >= 7
+    - ( myProd is not defined ) or
+      ( myProd is defined and myProd|bool != true ) or
+      ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+
+# local operations (unprivileged) - merge stat0 (main status) into unified CSV
+- name: Build Main Status CSV
+  become: false
+  block:  
+
+    - name: Create Main Status (stat0) CSV with header (local)
+      run_once:  true
+      local_action:  
+        module:  ansible.builtin.shell
+        cmd:  "/opt/el0ans/bin/{{ item }}.sh --header > /dev/shm/{{ item }}_{{ ansible_user_id }}_{{ myStamp }}.csv"
+      with_items:  
+        - 'el0ans-stat0csv'
+
+    - name: Merge each individual host Status CSV into Main Status (stat0) CSV (local)
+      throttle: 1
+      local_action:  
+        module:  ansible.builtin.shell
+        cmd:  "/bin/cat /dev/shm/{{ item }}_{{ myStamp }}/{{ item }}_{{ myStamp }}_{{ inventory_hostname }}.csv >> /dev/shm/{{ item }}_{{ ansible_user_id }}_{{ myStamp }}.csv"
+      with_items:  
+        - 'el0ans-stat0csv'
+      ignore_errors: true
+
+    - name: Print path to Main Status (stat0) CSV (local)
+      run_once:  true
+      local_action:
+        module:  ansible.builtin.debug
+        msg:  "Main Status (stat0) CSV file:  /dev/shm/{{ item }}_{{ ansible_user_id }}_{{ myStamp }}.csv"
+      with_items:  
+        - 'el0ans-stat0csv'
+
+  when:
+    - ansible_distribution_major_version|int >= 7
+
