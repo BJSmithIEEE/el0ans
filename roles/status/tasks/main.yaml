@@ -13,7 +13,7 @@
 
 # set username+timestamp
 - set_fact:
-    myStamp:  "{{ ansible_user_id }}-{{ ansible_date_time.iso8601_basic_short }}"
+    myStamp:  "{{ ansible_date_time.iso8601_basic_short }}"
 
 
 # privileged operation(s) - create/update director(ies)/script(s)
@@ -62,14 +62,15 @@
 
     - name: Run status script(s)
       ansible.builtin.shell:  
-        cmd:  "/opt/el0ans/bin/{{ item }} >> /dev/shm/{{ item }}_{{ myStamp }}.csv"
+        cmd:  "/opt/el0ans/bin/{{ item }} >> /dev/shm/{{ item }}_{{ myStamp }}_{{ inventory_hostname }}.csv"
       with_items:
         - 'el0ans-stat0csv'
       
     - name: Fetch output(s)
-      ansible.builtin.shell:
-        dest: "/dev/shm/{{ item }}_{{ myStamp }}/{{ item }}_{{ myStamp }}_{{ inventory_hostname }}.csv"
-        src:  "/dev/shm/{{ item }}_{{ myStamp }}.csv"
+      ansible.builtin.fetch:
+        flat: true
+        dest: "/dev/shm/{{ item }}_{{ ansible_user_id }}/"
+        src:  "/dev/shm/{{ item }}_{{ myStamp }}_{{ inventory_hostname }}.csv"
       with_items:  
         - 'el0ans-stat0csv'
 
@@ -95,7 +96,6 @@
         - 'bin'
 
     - name: Update unprivileged scripts
-      become: yes
       ansible.builtin.copy:
         src:  "{{ item }}"
         dest:  "/opt/el0ans/bin/"
@@ -124,7 +124,7 @@
       run_once:  true
       local_action:  
         module:  ansible.builtin.shell
-        cmd:  "/opt/el0ans/bin/{{ item }}.sh --header > /dev/shm/{{ item }}_{{ ansible_user_id }}_{{ myStamp }}.csv"
+        cmd:  "/opt/el0ans/bin/{{ item }}.sh --header > /dev/shm/{{ item }}_{{ ansible_user_id }}.csv"
       with_items:  
         - 'el0ans-stat0csv'
 
@@ -132,7 +132,7 @@
       throttle: 1
       local_action:  
         module:  ansible.builtin.shell
-        cmd:  "/bin/cat /dev/shm/{{ item }}_{{ myStamp }}/{{ item }}_{{ myStamp }}_{{ inventory_hostname }}.csv >> /dev/shm/{{ item }}_{{ ansible_user_id }}_{{ myStamp }}.csv"
+        cmd:  "/bin/cat /dev/shm/{{ item }}_{{ ansible_user_id }}/{{ item }}_{{ myStamp }}_{{ inventory_hostname }}.csv >> /dev/shm/{{ item }}_{{ ansible_user_id }}.csv"
       with_items:  
         - 'el0ans-stat0csv'
       ignore_errors: true
@@ -141,7 +141,7 @@
       run_once:  true
       local_action:
         module:  ansible.builtin.debug
-        msg:  "Main Status (stat0) CSV file:  /dev/shm/{{ item }}_{{ ansible_user_id }}_{{ myStamp }}.csv"
+        msg:  "Main Status (stat0) CSV file:  /dev/shm/{{ item }}_{{ ansible_user_id }}.csv"
       with_items:  
         - 'el0ans-stat0csv'
 
