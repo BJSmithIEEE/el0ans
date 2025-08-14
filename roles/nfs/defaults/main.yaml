@@ -3,17 +3,32 @@
 #
 ---
 
-# For all RHEL releases
+# Packages for all EL7-9 releases
 pkgsNfsCommon:
   - gssproxy
   - krb5-workstation
   - nfs-utils
 
-# RHEL release-specific
-
+# Packages for EL release-specific
 pkgsNfs7: []
-
 pkgsNfs8: []
-
 pkgsNfs9: []
+
+# settings for /etc/nfs.conf
+etc_nfsConf:
+  - { defsec: "gssd" , defvar: "use-gss-proxy" , setval: "use-gss-proxy=yes" }
+  - { defsec: "lockd" , defvar: "port" , setval: "port=32803" }
+  - { defsec: "lockd" , defvar: "udp-port" , setval: "port=32769" }
+  - { defsec: "mountd" , defvar: "port" , setval: "port=20048" }
+  - { defsec: "nfsd" , defvar: "vers2" , setval: "vers2=n" }
+  - { defsec: "nfsd" , defvar: "vers3" , setval: "vers3=y" }
+  - { defsec: "nfsd" , defvar: "vers4" , setval: "vers4=y" }
+  - { defsec: "nfsd" , defvar: "vers4.0" , setval: "vers4.0=y" }
+  - { defsec: "nfsd" , defvar: "vers4.1" , setval: "vers4.1=y" }
+  - { defsec: "nfsd" , defvar: "vers4.2" , setval: "vers4.2=y" }
+  - { defsec: "statd" , defvar: "port" , setval: "port=662" }
+
+# settings for /etc/nfsmount.conf
+etc_nfsmountConf:
+  - { defsec: "NFSMount_Global_Options" , defvar: "mountport" , setval: "mountport=20048" }
 

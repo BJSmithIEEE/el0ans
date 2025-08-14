@@ -1,5 +1,10 @@
+---
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }}) /// myCommit({{ myCommit | default('') }}) /// myNfs({{ myNfs | default('') }})"
 
-
+- name: End play if not Enterprise Linux (EL) family
+  meta: end_host
+  when: ansible_os_family != "RedHat"
 
 
 - name: Set pkgsNfsRel fact for Ansibel Distribution Major Version
@@ -38,26 +43,55 @@
 
   when:
     - ansible_distribution_major_version|int >= 7
+    - ( myProd is not defined ) or
+      ( myProd is defined and myProd|bool != true ) or
+      ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
 
 
 - name:  Configure systems (EL7-9) - NFS-RPC
   block:  
 
-    - name:  copy NFS configuration files (EL7-9) - NFS-RPC (all)
-      ### FUTURE NOTE:  This would be better served by 'Replace' in /etc/nfs.conf and /etc/nfsmount.conf between appropriate stanzas using arrays of hashes
+    # OLD #    - name:  copy NFS configuration files (EL7-9) - NFS-RPC (all)
+    # OLD #      ### FUTURE NOTE:  This would be better served by 'lineinfile' in /etc/nfs.conf and /etc/nfsmount.conf between appropriate stanzas using arrays of hashes
+    # OLD #      become:  yes
+    # OLD #      copy:  
+    # OLD #        backup:  yes
+    # OLD #        src:  "{{ item }}"
+    # OLD #        dest:  "/etc/"
+    # OLD #        owner:  root
+    # OLD #        group:  root
+    # OLD #        mode:  '0644'
+    # OLD #        seuser:  "system_u"
+    # OLD #        serole:  "object_r"
+    # OLD #        setype:  "etc_t"
+    # OLD #      with_fileglob:  
+    # OLD #        'etc/*'
+
+    - name:  update nfs.conf with all reserved ports - RPC-NFS (all)
+      # NOTE:  This has *NOT* been tested *YET*
       become:  yes
-      copy:  
+      lineinfile:  
+        path:  /etc/nfs.conf
         backup:  yes
-        src:  "{{ item }}"
-        dest:  "/etc/"
-        owner:  root
-        group:  root
-        mode:  '0644'
-        seuser:  "system_u"
-        serole:  "object_r"
-        setype:  "etc_t"
-      with_fileglob:  
-        'etc/*'
+        insertafter:  "^\s*[\s*{{ item.defsec }}\s*].*$"
+        insertbefore:  "^\s*[.*$"
+        regexp:  "^\s*{{ item.defvar }}\s*=.*$"
+        lineinfile:  "{{ item.setvar }}"
+        state:  present
+      with_items:  "{{ etc_nfsConf }}"
+
+    - name:  update nfsmount.conf with mountd reserved port - RPC-NFS (all)
+      # NOTE:  This has *NOT* been tested *YET*
+      become:  yes
+      lineinfile:  
+        path:  /etc/nfsmount.conf
+        backup:  yes
+        insertafter:  "^\s*[\s*{{ item.defsec }}\s*].*$"
+        insertbefore:  "^\s*[.*$"
+        regexp:  "^\s*{{ item.defvar }}\s*=.*$"
+        lineinfile:  "{{ item.setvar }}"
+        state:  present
+      with_items:  "{{ etc_nfsmountConf }}"
 
     - name:  copy system modules to load on boot (EL7-9) - RPC (all)
       become:  yes
@@ -171,5 +205,7 @@
 
   when:
     - ansible_distribution_major_version|int >= 7
-
+    - ( myProd is not defined ) or
+      ( myProd is defined and myProd|bool != true ) or
+      ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
 
