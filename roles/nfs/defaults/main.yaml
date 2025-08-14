@@ -1,0 +1,19 @@
+#
+#       roles/nfs/defaults/main.yaml
+#
+---
+
+# For all RHEL releases
+pkgsNfsCommon:
+  - gssproxy
+  - krb5-workstation
+  - nfs-utils
+
+# RHEL release-specific
+
+pkgsNfs7: []
+
+pkgsNfs8: []
+
+pkgsNfs9: []
+

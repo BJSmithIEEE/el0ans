@@ -1,0 +1,14 @@
+<?xml version=1.0 encoding="utf-8"?>
+<service>
+  <short>nfs-legacy</short>
+  <description>Legacy NFS-RPC ports statically configured in RHEL7-9 /etc/nfs.conf (and /etc/nfsmount.conf) and RHEL5-6 /etc/sysconfig/nfs</description>
+  <port protocl "tcp" port="892" />             <!-- mountd TCP - reserved RHEL7-9 mountd.xml already defines 20048 - RHEL5-6 defines MOUNTD_PORT=892 -->
+  <port protocl "udp" port="892" />             <!-- mountd UDP - reserved RHEL7-9 mountd.xml already defines 20048 - RHEL5-6 defines MOUNTD_PORT=892 -->
+  <port protocl "tcp" port="32803" />           <!-- nfslockd TCP - reserved RHEL7-9 lockd port - also RHEL5-6 compatible LOCKD_TCPPORT -->
+  <port protocl "udp" port="32769" />           <!-- nfslockd UDP - reserved RHEL7-9 lockd port - also RHEL5-6 compatible LOCKD_UDPPORT -->
+  <port protocl "tcp" port="662" />             <!-- statd TCP - reserved RHEL7-9 statd port - also RHEL5-6 compatible STATD_PORT -->
+  <port protocl "udp" port="662" />             <!-- statd UDP - reserved RHEL7-9 statd port - also RHEL5-6 compatible STATD_PORT -->
+</service>		
+
+
+

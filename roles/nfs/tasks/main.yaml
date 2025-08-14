@@ -1,0 +1,175 @@
+
+
+
+
+- name: Set pkgsNfsRel fact for Ansibel Distribution Major Version
+  set_fact:
+    pkgsNfsRel:  "{{ lookup('vars', 'pkgNfs' + ansible_distribution_major_version) }}"
+
+
+- name:  Install NFS Support Software (EL7-9)
+  ignore_errors:  true          # In case repos are not setup yet
+  block:
+
+    - name: Background software install up to 60 minutes (EL7-9)
+      become:  true
+      yum:
+        use_backend:  auto      # use DNF (EL8+) or YUM (EL7) as appropriate
+        download_only:  no
+        state:  present         # don't go out of the way to upgrade if already installed
+        update_only:  no
+        name:  "{{ pkgNfsCommon + pkgsNfsRel }}"
+        allow_downgrade:  no
+        autoremove:  no
+        disable_gpg_check:  no
+        skip_broken:  no
+      async:  3600
+      poll:  0
+      register:  installAsync
+
+    - name: Check on updates every 10 seconds for up to 60 minutes (EL7-9)
+      become: true
+      async_status:
+        jid:  "{{ installAsync.ansible_job_id }}"
+      register:  installResult
+      util:  installResult.finished
+      delay:  10
+      retries:  360
+
+  when:
+    - ansible_distribution_major_version|int >= 7
+
+
+- name:  Configure systems (EL7-9) - NFS-RPC
+  block:  
+
+    - name:  copy NFS configuration files (EL7-9) - NFS-RPC (all)
+      ### FUTURE NOTE:  This would be better served by 'Replace' in /etc/nfs.conf and /etc/nfsmount.conf between appropriate stanzas using arrays of hashes
+      become:  yes
+      copy:  
+        backup:  yes
+        src:  "{{ item }}"
+        dest:  "/etc/"
+        owner:  root
+        group:  root
+        mode:  '0644'
+        seuser:  "system_u"
+        serole:  "object_r"
+        setype:  "etc_t"
+      with_fileglob:  
+        'etc/*'
+
+    - name:  copy system modules to load on boot (EL7-9) - RPC (all)
+      become:  yes
+      copy:
+        backup:  no
+        src:  "{{ item }}"
+        dest:  "/etc/modules-load.d/"
+        owner:  root
+        group:  root
+        mode:  '0644'
+        # NO - inherit directory # seuser:  "system_u"
+        # NO - inherit directory # serole:  "object_r"
+        # NO - inherit directory # setype:  "etc_t"
+      with_fileglob:
+        - 'modules-load.d/*'
+
+    - name:  copy firewalld service configuration (EL7-9) - NFS-RPC (all)
+      become:  yes
+      ansible.builtin.copy:  
+        backup:  no
+        src:  "{{ item }}"
+        dest:  "/etc/firewalld/services/"
+        owner:  root
+        group:  root
+        mode:  '0644'
+        # NO - inherit directory # seuser:  "system_u"
+        # NO - inherit directory # serole:  "object_r"
+        # NO - inherit directory # setype:  "firewalld_etc_rw_t"
+      with_fileglob:
+        - 'firewalld/services/*'
+
+    - name:  enable firewalld services (EL7-9) - NFS-RPC (all)
+      become:  yes
+      ignore_errors:  yes         # may happen in some releases
+        ansible.posix.firewalld:
+        immediate:  yes
+        permanent:  yes
+        service:  "{{ item }}"
+        state:  enabled
+        # Upstream Default # zone:  public
+        zone:  default
+      with_items:  
+        - rpc-bind
+        - mountd
+        - nfs-legacy              # created above
+        
+    - name:  enable firewalld services (EL7-9) - NFS (Server)
+      become:  yes
+      ignore_errors:  yes         # may happen in some releases
+        ansible.posix.firewalld:
+        immediate:  yes
+        permanent:  yes
+        service:  "{{ item }}"
+        state:  enabled
+        # Upstream Default # zone:  public
+        zone:  default
+      with_items:  
+        - nfs
+        - nfs3
+      when:  
+        - myNfs is defined and myNfs == "server"
+
+    - name:  enable systemd services (EL7-9) - NFS-RPC (all)
+      become:  yes
+      ignore_errors:  yes         # may happen in some releases
+      systemd:  
+        daemon-reload:  yes
+        name:  "{{ item }}"
+        scope:  system
+        enabled:  yes
+        masked:  no
+        ### NO - do NOT restart ### state:  restarted
+        state:  started
+      with_items:  
+        - rpcbind
+        - rpc-gssd
+        - rpc-statd
+        - rpc-idmapd
+        - nfs-utils
+
+    - name:  enable systemd services (EL7-only) - NFS-RPC (all)
+      become:  yes
+      ignore_errors:  yes         # may happen in some releases
+      systemd:
+        daemon-reload:  yes
+        name:  "{{ item }}"
+        scope:  system
+        enabled:  yes
+        masked:  no
+        ### NO - do NOT restart ### state:  restarted
+        state:  started
+      with_items:  
+        - nfs-config
+      when:  ansible_distribution_major_version|int == 7
+
+    - name:  enable systemd services (EL7-9) - NFS (Server)
+      become:  yes
+      ignore_errors:  yes         # may happen in some releases
+      systemd:
+        daemon-reload:  yes
+        name:  "{{ item }}"
+        scope:  system
+        enabled:  yes
+        masked:  no
+        ### NO - do NOT restart ### state:  restarted
+        state:  started
+      with_items:
+        - nfs-server
+      when:  
+        - myNfs is defined and myNfs == "server"
+
+  when:
+    - ansible_distribution_major_version|int >= 7
+
+
