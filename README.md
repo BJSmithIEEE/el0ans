@@ -9,7 +9,7 @@ The following table lists Ansible roles provided in this repository.
 
 | role | calling playbook(s) | purpose | notes |
 | --------:|:--------------:|:------------------------------------ |:--------------------------------- |
-| [nvidia](./roles/nvidia/) | [system-update](./system-update.yaml) | DNF (RHEL8+) managed nVidia Driver release and CUDA version(s), uses [nVidia CUDA YUM repositories](https://developer.download.nvidia.com/compute/cuda/repos/) | RHEL8+ only (tasks largely skipped on RHEL7, use tarball installer), called `prior` to using DNF to update the system, sets/updates Driver and CUDA, which may be overridden by inventory variables (e.g., `myNDvr` & `myCUDA`) |
+| [nvidia](./roles/nvidia/) | [system-update](./system-update.yaml) | DNF (RHEL8+) managed nVidia Driver release and CUDA version(s), uses [nVidia CUDA YUM repositories](https://developer.download.nvidia.com/compute/cuda/repos/) | RHEL8+ only (tasks largely skipped on RHEL7, use tarball installer), called `prior` to using DNF to update the system, sets/updates Driver and CUDA, which may be overridden by inventory variables (e.g., `myNDvr` & `myCuda`) |
 | [snmp](./roles/snmp/) | *none* (i.e., use [single-role](./single-role.yaml)) | install and configure `net-snmp` for SNMPv3 read-only (**no** SNMP1/2c) to a DISA STIG compliant configuration | RHEL8+ (net-snmp 5.8+) will utilized AES256/SHA-512 for RHEL8+ (RHEL6/7 only does AES128/SHA1 aka SHA-160) |
 
 > **IMPORTANT:**  By default, the roles assume `become=false`, and use the `become: true` in individual or blocks of tasks where privilege escalation is required.  See [Ansible Configuration Example](#ansible-configuration-example) for more information.
