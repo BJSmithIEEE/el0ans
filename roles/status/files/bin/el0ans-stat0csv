@@ -15,7 +15,7 @@
 case "${1}" in
 	'-H' | '--HEAD' | '--HEADER' | '--Head' | '--Header' | '-h' | '--head' | '--header' )
 		# Print Header
-		/bin/echo "DATE_TIME (DoW),HOSTNAME,LOAD_AVG,BOOT_TIME (UPTIME),[KERNEL] ERRATA,SELINUX,FIPS,(USED%) ALL_LOCAL_FS"
+		/bin/echo "DATE_TIME (DoW),HOSTNAME,LOAD_AVG,BOOT_TIME (UPTIME),KVER [REL] ERR,SELINUX,FIPS,(USED%) ALL_LOCAL_FS"
 		;;
 	*)
 		# Print Status
