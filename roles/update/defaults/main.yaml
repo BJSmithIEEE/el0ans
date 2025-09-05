@@ -1,0 +1,23 @@
+--- 
+
+### Packages that should NOT be updated as part of the OS / alongside OS patches
+
+# Common
+pkgsSkipCommon:
+  - gitlab-ce
+  - gitlab-ee
+
+# For any Release 9, 8, 7
+
+pkgsSkip9:  
+  - "{{ pkgsSkipCommon }}"
+#  - add RHEL9 specific
+
+pkgsSkip8:  
+  - "{{ pkgsSkipCommon }}"
+#  - add RHEL8 specific
+
+pkgsSkip7:  
+  - "{{ pkgsSkipCommon }}"
+#  - add RHEL7 specific
+

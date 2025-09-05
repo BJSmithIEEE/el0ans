@@ -1,0 +1,158 @@
+---
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }}) /// myCommit({{ myCommit | default('') }}) /// myGpu({{ myGpu | default('') }}) /// myNDvr({{ myNDvr | default('') }})"
+
+- name: End play if not Enterprise Linux (EL) family
+  meta: end_host
+  when: ansible_os_family != "RedHat"
+
+
+- name: Set pkgsSkip fact for Ansible Distribution Major Version
+  set_fact:  
+    pkgsSkip:  "{{ lookup('vars', 'pkgsSkip' + ansible_distribution_major_version) }}"
+
+
+- name: Do updates
+  block:  
+
+    - name:  disable repo (NOT package) checking pre-download (EL7-only)
+      become:  yes
+      replace:  
+        backup:  no
+        path:  "/etc/yum.conf"
+        regexp:  '^\s*repo_gpgcheck\s*='
+        replace:  '### PATCHING NOW ### repo_gpgcheck='
+      when: ansible_distribution_major_version|int == 7
+
+    - name: Download updates but do NOT install them
+      become: yes
+      yum:
+        update_cache: yes
+        download_only:  yes
+        state:  latest
+        update_only:  yes
+        name:  "*"
+      # Set one or both of these to only download security (RHSA) and/or bugfix (RHBA) updates, but not any Enhancements (RHEA)
+        # security:  no
+        # bugfix:  no
+        allow_downgrade:  no
+        autoremove:  no
+        disable_gpg_check:  no
+        skip_broken:  no
+        use_backend:  auto
+        exclude:  "{{ pkgsSkip }}"
+
+    - name:  re-enable repo checking post-download (EL7-only)
+      become:  yes
+      replace:  
+        backup:  no
+        path:  "/etc/yum.conf"
+        regexp:  '^\s*###\s*PATCHING\s*NOW\s*###\s*'
+        replace:  ''
+      when: ansible_distribution_major_version|int == 7
+
+  when: ansible_distribution_major_version|int >== 7
+
+    - name:  Execute only on NON-PROD systems or ALL systems if Commit IS explicitly passed
+      block:  
+
+        # Example stopping of services - git
+        - name:  system role is git
+          block:
+  
+            - name:  Warn gitlab services are coming down
+              become: yes
+              shell:
+                cmd:  "/usr/bin/wall Gitlab services will be stopped in 2 minutes!  The system will be patched 2 minutes later."
+  
+            - name:  Pause 30 seconds before gitlab services are stopped
+              become: no
+              pause:
+                seconds:  30
+  
+            - name:  Stop gitlab services
+              become: yes
+              shell:  
+                cmd:  "/usr/bin/gitlab-ctl stop"
+  
+          when: myRole is defined and myRole == 'git'
+  
+        # Example stopping of services - someServices
+        - name:  system role is someService
+          block:
+  
+            - name:  Warn someServices are coming down
+              become: yes
+              shell:
+                 cmd:  "/usr/bin/wall someServices will be stopped in 2 minutes!  The system will be patched 2 minutes later."
+  
+            - name:  Pause 30 seconds before someServices are stopped
+              become: no
+              pause:
+                seconds:  30
+  
+            - name: stop select services
+              become: yes
+              systemd:
+                name: "{{ item }}"
+                daemon_reload: no
+                state:   stopped
+              with_items:
+                - blah
+                - mysqld
+  
+          when: myRole is defined and myRole == 'someServices'
+  
+        - name: Warn patching is to commence in 2 minutes
+          become: yes
+          shell:
+            cmd:  "/usr/bin/wall Patching will commence in 2 minutes!"
+  
+        - name: Pause 2 minutes before patching
+          become: no
+          pause:
+            minutes:  2
+  
+        - name:  Actually install updates
+          block:
+  
+            - name:  Background updates up to 60 minutes
+              become: yes
+              yum:
+                download_only:  no
+                state:  latest
+                update_only:  yes
+                name:  "*"
+              # Set one or both of these to only install security (RHSA) and/or bugfix (RHBA) updates, but not any Enhancements (RHEA)
+                # security:  no
+                # bugfix:  no
+                allow_downgrade:  no
+                autoremove:  no
+                disable_gpg_check:  no
+                skip_broken:  no
+                use_backend:  auto
+                exclude:  "{{ pkgsSkip }}"
+              async: 3600
+              poll:  0
+              register:  updateAsync
+  
+            - name: Check on updates every 10 seconds - up to 60 minutes
+              become: yes
+              async_status:  
+                jid:  "{{ updateAsync.ansible_job_id }}"
+              register: updateResult
+              until:  updateResult.finished
+              retries: 360
+              delay: 10
+   
+         - name: Warn a reboot is to commence shortly
+           become: yes
+           shell:
+             cmd:  "/usr/bin/wall Reboot will commence shortly, please log off!"
+  
+    when: 
+      - ansible_distribution_major_version|int >== 7
+      - ( myProd is not defined ) or
+        ( myProd is defined and myProd|bool != true ) or
+        ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+
