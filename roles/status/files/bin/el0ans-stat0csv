@@ -4,12 +4,12 @@
 #
 # Columns (paths are based on up to RHEL6 locations, RHEL7+ /bin = /usr/bin)
 #   1)  DATE_TIME (DoW)		/bin/date '+%m-%d %H:%M (%a)'
-#   2)  HOSTNAME		/bin/hostname
-#   3)  LOAD_AVG		/usr/bin/uptime | /bin/sed -e 's/^.*load\s\+average[:]\s\+//g' -e 's/[,]//g'
+#   2)  HOSTNAME			/bin/hostname
+#   3)  LOAD_AVG			/usr/bin/uptime | /bin/sed -e 's/^.*load\s\+average[:]\s\+//g' -e 's/[,]//g'
 #   4)  BOOT_TIME (UPTIME)	/usr/bin/uptime -s | /bin/sed -e 's/^[2][0-9]\{3\}[-]//g' -e 's/[:][0-9]\{2\}$//g' (/usr/bin/uptime -p | /bin/sed -e 's/^up\s\+//g' -e 's/\s\+year[s]*[,]*/y/' -e 's/\s\+month[s]*[,]*/m/' -e 's/\s\+week[s]*[,]*/w/' -e 's/\s\+day[s]*[,]*/d/' -e 's/\s\+hour[s]*[,]*/h/' -e 's/\s\+minute[s]*[,]*/m/' -e 's/\s\+second[s]*[,]*/s/')
-#   5)  [KERNEL] ERRATA		/bin/uname -r | /bin/awk -F ',' '{ print "[" $1 "." $2 "." $3 "] " $4 "." $5 " " $6 }'
-#   6)  SELINUX			/usr/sbin/getenforce
-#   7)  FIPS			/bin/sed -n 's/^.*\s\(fips[=].\)\s.*$/\1/p' /proc/cmdline
+#   5)  KVER [REL] ERR		/bin/uname -r | /bin/awk -F '.' '{ print "[" $1 "." $2 "." $3 " [" $6 "] " $4 "." $5 } | sed -e 's/\]\s\+el\([0-9_]\+\)[.]$/el\1\]/g'
+#   6)  SELINUX				/usr/sbin/getenforce
+#   7)  FIPS				/bin/sed -n 's/^.*\s\(fips[=].\)\s.*$/\1/p' /proc/cmdline
 #   8)  (USED%) ALL_LOCAL_FS	/bin/df -t xfs -t ext4 --output=target,pcent | /bin/grep '\/' | /bin/sort -nr -k 2,2 | /bin/awk '{ printf "(%s)%s " , $2 , $1 }'
 
 case "${1}" in
@@ -23,7 +23,7 @@ case "${1}" in
 		h="$(/bin/hostname)"
 		l="$(/usr/bin/uptime | /bin/sed -e 's/^.*load\s\+average[:]\s\+//g' -e 's/[,]//g')"
 		u="$(/usr/bin/uptime -s | /bin/sed -e 's/^[2][0-9]\{3\}[-]//g' -e 's/[:][0-9]\{2\}$//g') ($(/usr/bin/uptime -p | /bin/sed -e 's/^up\s\+//g' -e 's/\s\+year[s]*[,]*/y/' -e 's/\s\+month[s]*[,]*/m/' -e 's/\s\+week[s]*[,]*/w/' -e 's/\s\+day[s]*[,]*/d/' -e 's/\s\+hour[s]*[,]*/h/' -e 's/\s\+minute[s]*[,]*/m/' -e 's/\s\+second[s]*[,]*/s/'))"
-		k="$(/bin/uname -r | /bin/awk -F '.' '{ print "[" $1 "." $2 "." $3 "] " $4 "." $5 " " $6 }')"
+		k="$(/bin/uname -r | /bin/awk -F '.' '{ print "[" $1 "." $2 "." $3 " [" $6 "] " $4 "." $5 } | sed -e 's/\]\s\+el\([0-9_]\+\)[.]$/el\1\]/g' )"
 		s="$(/usr/sbin/getenforce)"
 		f="$(/bin/sed -n 's/^.*\s\(fips[=].\)\s.*$/\1/p' /proc/cmdline)"
 		d="$(/bin/df -t xfs -t ext4 --output=target,pcent | /bin/grep '\/' | /bin/sort -nr -k 2,2 | /bin/awk '{ printf "(%s)%s " , $2 , $1 }')"
