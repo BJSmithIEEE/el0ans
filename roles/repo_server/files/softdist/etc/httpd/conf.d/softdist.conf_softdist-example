@@ -4,9 +4,8 @@
 alias /softdist /storage/softdist
 <Directory /storage/softdist>
 	Options +Indexes
-	IndexOptions +FancyIndexing +FoldersFirst +HTMLTable +NameWidth=*
+	IndexOptions +FancyIndexing +FoldersFirst +HTMLTable +NameWidth=* +VersionSort
 	Order allow,deny
 	Allow from all
 	Require all granted
 </Directory>
-
