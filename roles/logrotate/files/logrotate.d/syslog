@@ -1,0 +1,41 @@
+#
+#	/etc/logrotate.d/rsyslog
+#	Meet DISA STIG rotation requirements of 6 months,
+#		but also limit files to 256MiB (10-15MiB compressed) max
+#	For the file size limit to work throughout the day,
+#		logrotate must be run from /etc/cron.hourly/, not /etc/cron.daily/
+#
+/var/log/cron
+/var/log/maillog
+/var/log/messages
+/var/log/secure
+/var/log/spooler
+{
+    ### OPTIONS
+    daily
+    compress
+    # Hour append required, in case it is rotated more than once because of size, otherwise will end in _00 (new day)
+    dateformat -%Y%m%d_%H
+    # Delay compression until the 2nd file as rsyslog can cause issues
+    delaycompress
+    # Rotate to keep /var/log from filling up, should only 10-15MiB compressed
+    maxsize 256M
+    missingok
+    # Keep 180 days or 180 files total, if reaching 256MiB faster
+    rotate 180
+    # Run all scripts just once
+    sharedscripts
+    
+    ### POST ROTATE
+    postrotate
+	# Use systemd and/or kill directly, in order ... 
+	if [ -e "/lib/systemd/system/rsyslog.service" ] ; then
+		/usr/bin/systemctl -s HUP kill rsyslog.service >/dev/null 2>&1 || true
+	elif [ -e "/var/run/rsyslogd.pid" ] ; then
+		/bin/kill -HUP `cat /var/run/rsyslogd.pid 2> /dev/null` 2> /dev/null || true
+	elif [ -e "/var/run/syslogd.pid" ] ; then
+		/bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+	fi
+    endscript
+}
+

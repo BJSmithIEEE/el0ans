@@ -1,0 +1,109 @@
+---
+#
+#       ./logrotate/tasks/main.yml
+#       WARNING:  This currently ONLY works thru EL8 (EL9+ forthcoming)
+#
+
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }}) /// myCommit({{ myCommit | default('') }})"
+
+- name: End play if not CentOS/RHEL
+  meta: end_host
+  when: ansible_os_family != "RedHat"
+
+
+- name:  backup existing logrotate configuration
+  block: 
+
+    - name:  ensure backup directory exists
+      become: yes
+      file:
+        path: "/etc/logrotate.backups"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode:  "0755"
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "etc_t"
+
+    - name:  backup existing logrotate configuration
+      become: yes
+      shell:
+        chdir: "/etc"
+        cmd: "/usr/bin/tar -cz --selinux --xattrs -f logrotate.backups/logrotate_{{ ansible_date_time.iso8601_basic_short }}.tar.gz ./logrotate.conf ./logrotate.d/ ./cron*/logrotate"
+        # deprecated after 2.9 # warn: no
+      ignore_errors: yes
+
+  when:  
+    - ansible_distribution_major_version|int <= 8
+
+
+- name:  update logrotate configuration
+  block:  
+
+    - name: update logrotate.d files (thru EL8)
+      become: yes
+      copy:
+        src:  "{{ item }}"
+        dest:  "/etc/logrotate.d/"
+        backup: no
+        owner: root
+        group: root
+        mode:  '0644'
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "etc_t"
+      with_fileglob:
+        - 'logrotate.d/*'
+
+  when:
+    - ansible_distribution_major_version|int <= 8
+    - ( myProd is not defined ) or
+      ( myProd is defined and myProd|bool != true ) or
+      ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+
+
+- name:  ensure logrotate runs frequently (thru EL8)
+  block:  
+
+    - name:  check if logrotate exists in cron.hourly (thru EL8)
+      become: yes  
+      stat:  
+        path:  /etc/cron.hourly/logrotate
+      register:  logrotate_hourly
+      changed_when:  logrotate_hourly.stat.exists == false
+
+
+    - name:  change logrotate to run hourly (thru EL8)
+      block:  
+
+        - name:  if not, copy cron.daily/logrotate to cron.hourly/ (thru EL8)
+          become: yes  
+          copy:  
+            remote_src:  yes
+            src:  /etc/cron.daily/logrotate
+            dest:  /etc/cron.hourly/
+            backup: no
+            owner: root
+            group: root
+            mode:  '0755'
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "bin_t"
+
+        # NOTE:  This is dangerous, which is why we backup any cron files for logrotate and put this in the block wtih copy if not present
+        - name:  if copy successful, remove any existing cron.daily/logrotate (thru EL8)
+          become: yes
+          file:  
+            state:  absent
+            path:  /etc/cron.daily/logrotate
+
+      when:  logrotate_hourly.stat.exists == false
+
+  when:
+    - ansible_distribution_major_version|int <= 8
+    - ( myProd is not defined ) or
+      ( myProd is defined and myProd|bool != true ) or
+      ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+
