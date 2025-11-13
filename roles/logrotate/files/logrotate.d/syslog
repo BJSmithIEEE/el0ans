@@ -1,5 +1,5 @@
 #
-#	/etc/logrotate.d/rsyslog
+#	/etc/logrotate.d/syslog
 #	Meet DISA STIG rotation requirements of 6 months,
 #		but also limit files to 256MiB (10-15MiB compressed) max
 #	For the file size limit to work throughout the day,
