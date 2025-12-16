@@ -8,7 +8,7 @@
 
 ###     nVidia driver - this should be DKMS and a DataCenter certified driver release
 # SEE:  https://docs.nvidia.com/datacenter/tesla/index.html
-# CUR:  As of 2025Q2, this is R570 (570-dkms) w/CUDA 12.8
+# CUR:  As of 2025Q3, this is R580 (580-dkms) w/CUDA 13.0
 
 ###     COMMON (to all EL)
 
@@ -24,7 +24,9 @@ defSWelX_nvidia_cuda:
 # DC #  - cuda-12-0.x86_64        # R525 (DataCenter Certified) - initial CUDA 12 release
 # DC #  - cuda-12-2.x86_64        # R535 (DataCenter Certified) - Long Term Stable
 # DC #  - cuda-12-4.x86_64        # R550 (DataCenter Certified)
-  - cuda-12-8.x86_64    # R570 (DataCenter Certified) - 2025Q2
+# DC #  - cuda-12-8.x86_64    # R570 (DataCenter Certified) - 2025Q2
+  - cuda-12-9.x86_64    # Final CUDA 12 release
+  - cuda-13-0.x86_64    # R580 (DataCenter Certified) - 2025Q3
 
 # nVidia dependencies Software
 defSWelX_nvidia_apis:  
@@ -49,8 +51,9 @@ defSWelX_nvidia_apis:
 
 ###     RHEL9
 
-defSWel9_nvidia_dvr:  570-dkms
+defSWel9_nvidia_dvr:  580-dkms
 # 2025Q1 # defSWel9_nvidia_dvr:  550-dkms
+# 2025Q2 # defSWel9_nvidia_dvr:  570-dkms
 
 defSWel9_nvidia_deps:  "{{ defSWelX_nvidia_deps }}"
 
@@ -61,8 +64,9 @@ defSWel9_nvidia_apis:  "{{ defSWelX_nvidia_apis }}"
 
 ###     RHEL8
 
-defSWel8_nvidia_dvr:  570-dkms
+defSWel8_nvidia_dvr:  580-dkms
 # 2025Q1 # defSWel8_nvidia_dvr:  550-dkms
+# 2025Q2 # defSWel8_nvidia_dvr:  570-dkms
 
 defSWel8_nvidia_deps:  "{{ defSWelX_nvidia_deps }}"
 
