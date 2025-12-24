@@ -1,0 +1,60 @@
+#
+#       /etc/yum.repos.d/REPO_TPS-htcondor.repo
+#       REPO Server repos for High-Throughput Computing (HTC) Condor
+#
+#       RHEL7:  8.8 (FIPS), 10.x & 23.x
+#       RHEL8:  8.8 (FIPS), 10.x, 23.x, 24.x, 25.x
+#       RHEL9:  10.x, 23.x, 24.x, 25.x
+#
+
+
+[htcondor_condor-8.8]
+enabled=0
+countme=0
+name=REPO Server - HTCondor release 8.8 RPMs for RHEL $releasever (FIPS Compliant)
+baseurl=https://htcss-downloads.chtc.wisc.edu/repo/8.8/el$releasever/fips/
+gpgcheck=1
+# MULTIPLE # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-HTCondor-8.x
+# exclude - do NOT pull any debuginfo packages
+exclude=*debuginfo*
+
+[htcondor_condor-10.x]
+enabled=0
+countme=0
+name=REPO Server - HTCondor release 10.x RPMs for RHEL $releasever - $basearch
+baseurl=https://htcss-downloads.chtc.wisc.edu/repo/10.x/el$releasever/$basearch/release/
+gpgcheck=1
+# MULTIPLE # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-HTCondor-10.x
+# exclude - do NOT pull any debuginfo packages
+exclude=*debuginfo*
+
+[htcondor_condor-23.x]
+enabled=0
+countme=0
+name=REPO Server - HTCondor release 23.x RPMs for RHEL $releasever - $basearch
+baseurl=https://htcss-downloads.chtc.wisc.edu/repo/23.x/el$releasever/$basearch/release/
+gpgcheck=1
+# MULTIPLE # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-HTCondor-23.x
+# exclude - do NOT pull any debuginfo packages
+exclude=*debuginfo*
+
+[htcondor_condor-24.x]
+enabled=0
+countme=0
+name=REPO Server - HTCondor release 24.x RPMs for RHEL $releasever - $basearch
+baseurl=https://htcss-downloads.chtc.wisc.edu/repo/24.x/el$releasever/$basearch/release/
+gpgcheck=1
+# MULTIPLE # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-HTCondor-24.x
+# exclude - do NOT pull any debuginfo packages
+exclude=*debuginfo*
+
+[htcondor_condor-25.x]
+enabled=0
+countme=0
+name=REPO Server - HTCondor release 25.x RPMs for RHEL $releasever - $basearch
+baseurl=https://htcss-downloads.chtc.wisc.edu/repo/25.x/el$releasever/$basearch/release/
+gpgcheck=1
+# MULTIPLE # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-HTCondor-25.x
+# exclude - do NOT pull any debuginfo packages
+exclude=*debuginfo*
+
