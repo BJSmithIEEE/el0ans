@@ -51,8 +51,6 @@
         replace:  ''
       when: ansible_distribution_major_version|int == 7
 
-  when: ansible_distribution_major_version|int >== 7
-
     - name:  Execute only on NON-PROD systems or ALL systems if Commit IS explicitly passed
       block:  
 
@@ -145,14 +143,14 @@
               retries: 360
               delay: 10
    
-         - name: Warn a reboot is to commence shortly
-           become: yes
-           shell:
-             cmd:  "/usr/bin/wall Reboot will commence shortly, please log off!"
+        - name: Warn a reboot is to commence shortly
+          become: yes
+          shell:
+            cmd:  "/usr/bin/wall Reboot will commence shortly, please log off!"
   
-    when: 
-      - ansible_distribution_major_version|int >== 7
-      - ( myProd is not defined ) or
-        ( myProd is defined and myProd|bool != true ) or
-        ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
+      when: 
+        - ansible_distribution_major_version|int >= 7
+        - ( myProd is not defined ) or
+          ( myProd is defined and myProd|bool != true ) or
+          ( myProd is defined and myProd|bool == true and myCommit is defined and myCommit|bool == true )
 
