@@ -25,13 +25,13 @@ mySyntax() {
 	echo -e "where 1 commits to updating the following Staging Third Party Software (TPS) repositories from the Internet ..."
         case ${myV}${myR0} in
                 redhat9)
-                        echo -e "\t${cTPS9} gitlab_gitlab-ce gitlab_gitlab-ee"
+                        echo -e "\t${cTPS9} ${pTPS9} gitlab_gitlab-ce gitlab_gitlab-ee"
                         ;;
                 redhat8)
-                        echo -e "\t${cTPS8} gitlab_gitlab-ce gitlab_gitlab-ee"
+                        echo -e "\t${cTPS8} ${pTPS8} gitlab_gitlab-ce gitlab_gitlab-ee"
                         ;;
                 redhat7)
-                        echo -e "\t${cTPS7} gitlab_gitlab-ce gitlab_gitlab-ee"
+                        echo -e "\t${cTPS7} ${pTPS7} gitlab_gitlab-ce gitlab_gitlab-ee"
                         ;;
                 *)
                         echo -e "\tUNKNOWN"
@@ -47,7 +47,8 @@ mySyntax() {
 
 [ "${myGet}" == "" ] && mySyntax && exit 127
 
-# All TPS but GitLab
+
+# Default TPS but GitLab
 echo -e "\n$(date)\n" >> ${myRoot}/yum/.staging/.log/staging_reposync-TPS${myR0}_${myDsymd}.log
 case ${myV}${myR0} in
 	redhat9)
@@ -78,6 +79,7 @@ case ${myV}${myR0} in
 		fi
 		;;
 esac
+
 
 # GitLab
 if [ -w "${myRoot}/yum/.staging/TPS${myR0}" ] && [ "${vGitLab}" != "" ] ; then

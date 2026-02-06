@@ -19,6 +19,9 @@ myAbs="$(readlink -f ${myDir})"
 # Internal
 myLogRFus="${myRoot}/yum/.staging/.log/staging_rsync-RPMFusion${myPr0}_${myDsymd}.log"
 
+# umask needs to be 002
+umask 002
+
 
 #####	FUNCTIONS
 

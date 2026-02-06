@@ -1,0 +1,25 @@
+#
+#       /etc/yum.repos.d/REPO_TPS-sublimehq.repo
+#       REPO Server repos for Sublime HQ
+#
+#       TPS7 Sublime HQ considerations:
+#         - *NOT* Directly Browseable
+#         - Location of software in Intel YUM Repos:
+#              Sublime Text Stable:    https://download.sublimetext.com/rpm/stable/x86_64/
+
+#####
+#####   Sublime HQ Sublime Text Stable
+#####
+
+[sublimehq_text]
+baseurl=https://download.sublimetext.com/rpm/stable/x86_64/
+countme=0
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-SublimeHQ-222d23d0-5910b0f0
+name=SublimeHQ Text
+# includepkgs - only allow these packages
+# includepkgs=
+# exclude - allow all but these packages
+# exclude=
+

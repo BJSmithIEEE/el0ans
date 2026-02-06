@@ -24,7 +24,9 @@ myRFus=mirror.math.princeton.edu/pub/rpmfusion
 
 ## GitLab Releases
 vGitLab="15.6.8 15.7.9 15.8.6 15.9.8 15.10.8 15.11.13 \
-	16.0.10 16.1.8 16.2.11 16.3.9 16.4.7 16.5.10 16.6.10 16.7.10 16.8.10 16.9.11 16.10.10 16.11.10"
+	16.0.10 16.1.8 16.2.11 16.3.9 16.4.7 16.5.10 16.6.10 16.7.10 16.8.10 16.9.11 16.10.10 16.11.10 \
+	17.0.8 17.1.8 17.2.9 17.3.7 17.4.6 17.5.5 17.6.5 17.7.7 17.8.7 17.9.8 17.10.8 17.11.7 \
+	18.0.6 18.1.6 18.2.8 18.3.6 18.4.6 18.5.5"
 
 ### FULL CHANNELS
 
@@ -32,18 +34,25 @@ vGitLab="15.6.8 15.7.9 15.8.6 15.9.8 15.10.8 15.11.13 \
 # get dotnet # xRedHat9="--exclude=dotnet*"
 # get dotnet # xRedHat8="--exclude=dotnet*"
 
-## TPS Channels (intel oneAPI is huge ~1TB)
-#cTPS9="intel_oneAPI microsoft_powershell microsoft_vscode"
-cTPS9="microsoft_powershell microsoft_vscode"
-#cTPS8="intel_oneAPI microsoft_powershell microsoft_vscode"
-cTPS8="microsoft_powershell microsoft_vscode"
-#cTPS7="intel_oneAPI microsoft_powershell microsoft_vscode"
-cTPS7="microsoft_powershell microsoft_vscode"
+## TPS Channels
+cTPS9="intel_oneAPI microsoft_powershell microsoft_vscode htcondor_condor-25.x htcondor_condor-24.x htcondor_condor-23.x htcondor_condor-10.x"
+cTPS8="intel_oneAPI microsoft_powershell microsoft_vscode Symantec_SDCSS htcondor_condor-25.x htcondor_condor-24.x htcondor_condor-23.x htcondor_condor-10.x htcondor_condor-8.8"
+cTPS7="intel_oneAPI microsoft_powershell microsoft_vscode htcondor_condor-23.x htcondor_condor-10.x htcondor_condor-8.8"
 
-## CUDA Channels (skip CUDA for RHEL7, no DNF module)
+## Problematic TPS Channels
+#pTPS9="sublimehq_text"
+#pTPS8="sublimehq_text"
+#pTPS7="sublimehq_text"
+
+## Unified TPS Channels (attempt to look to lowest release for packages)
+uTPS9="intel_oneAPI"
+uTPS8="intel_oneAPI"
+uTPS7="intel_oneAPI"
+
+## CUDA Channels
 cCUDA9="nvidia_cuda"
 cCUDA8="nvidia_cuda"
-# SKIP # cCUDA7="nvidia_cuda"
+cCUDA7="nvidia_cuda"
 
 ## Red Hat 8+ (these should probably be a hash)
 cRedHat9="rhel-9-for-x86_64-baseos-rpms rhel-9-for-x86_64-appstream-rpms rhel-9-for-x86_64-supplementary-rpms codeready-builder-for-rhel-9-x86_64-rpms"

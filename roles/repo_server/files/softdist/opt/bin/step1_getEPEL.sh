@@ -20,6 +20,9 @@ myAbs="$(readlink -f ${myDir})"
 # Internal
 myLogEpel="${myRoot}/yum/.staging/.log/staging_rsync-EPEL${myPr0}_${myDsymd}.log"
 
+# umask needs to be 002
+umask 002
+
 
 #####	FUNCTIONS
 
