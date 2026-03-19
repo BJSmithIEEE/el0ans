@@ -55,7 +55,15 @@ ojList(){
 }
 
 
-#######	DEFAULTS
+#######	DEFAULTS (examples for user ~/.bashrc)
 
-# default to OpenJDK 21
-ojHome 21
+### save PATH prior to prepending OpenJDK ./bin
+# export PATHojPre=${PATH}
+
+### default to OpenJDK 21
+# ojHome 21
+# export PATH=${JAVA_HOME}/bin:${PATHojPre}
+
+### change later to OpenJDK 17
+# ojHome 17
+# export PATH=${JAVA_HOME}/bin:${PATHojPre}
