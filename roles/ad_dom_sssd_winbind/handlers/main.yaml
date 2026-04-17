@@ -1,0 +1,75 @@
+#
+#       ./ansible/roles/adDomSssdWinbind/handlers/main.yaml
+#
+
+- name: reload_firewalld
+  ignore_errors: yes
+  become: yes
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: yes
+    enabled: yes
+    masked:  no
+    state:   reloaded
+  with_items:
+    - firewalld
+
+# Nuke the SSSite from orbit ... it's the only way to be sure
+- name: restart_sssd
+  ignore_errors: yes
+  become: yes
+  shell:
+    cmd:  "/usr/bin/systemctl unmask sssd ; /usr/bin/systemctl enable sssd ; /usr/bin/systemctl stop sssd ; /bin/rm -rf /var/lib/sss/db/* ; /usr/bin/systemctl start sssd"
+    # deprecated after 2.9 # warn: no
+  when:
+   - ansible_kernel.find('Microsoft') == -1
+   - ansible_os_family == "RedHat"
+   - ansible_distribution_major_version|int >= 7
+
+- name: restart_winbind
+  ignore_errors: yes
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: yes
+    enabled: yes
+    masked:  no
+  with_items:
+    - winbind
+  when:
+   - ansible_kernel.find('Microsoft') == -1
+   - ansible_os_family == "RedHat"
+   - ansible_distribution_major_version|int >= 7
+
+- name: restart_nfs_client
+  ignore_errors: yes
+  become: yes
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: yes
+    enabled: yes
+    masked:  no
+  with_items:
+    - rpcbind
+    - nfs-idmapd
+    - nfs-utils
+  when:
+   - ansible_kernel.find('Microsoft') == -1
+   - ansible_os_family == "RedHat"
+   - ansible_distribution_major_version|int >= 7
+
+- name: restart_nfs_smb
+  ignore_errors: yes
+  become: yes
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: yes
+    enabled: yes
+    masked:  no
+  with_items:
+    - nfs-server 
+    - smb
+  when:
+   - ansible_kernel.find('Microsoft') == -1
+   - ansible_os_family == "RedHat"
+   - ansible_distribution_major_version|int >= 7
+

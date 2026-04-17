@@ -1,0 +1,16 @@
+---
+- hosts: all
+  gather_facts: yes
+  vars_prompt:
+    - name: JOINROLE
+      prompt: "CIFS/SMB *FILE* Server (YES in all CAPS)?"
+      private: no
+    - name: JOINACCT
+      prompt: "AD domain user NAME to join:"
+      private: no
+    - name: JOINPWD
+      prompt: "AD domain user PASSWORD:"
+      private: yes
+  roles:
+    - ad_dom_sssd_winbind
+

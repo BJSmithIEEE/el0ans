@@ -1,0 +1,4 @@
+## Allows IT group to run all commands
+# NO # %IT	ALL=(ALL)	NOPASSWD: ALL
+%IT	ALL=(ALL)	ALL
+

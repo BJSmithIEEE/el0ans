@@ -1,0 +1,58 @@
+#
+#       ./ansible/roles/adDomSssdWinbind/defaults/main.yaml
+#
+### See Red Hat Solutions 3802321 (including comments 2357065 2358242)
+#   - https://access.redhat.com/solutions/3802321
+#   - https://access.redhat.com/solutions/3802321#comment-2357065  (FIPS crypto policies)
+#   - https://access.redhat.com/solutions/3802321#comment-2358242  (adcli instead of realm join)
+#   - https://access.redhat.com/solutions/3802321#comment-2361615  (additional RPM packages and man 8 idmap_* pages)
+# Also see (for some background):
+#   - https://access.redhat.com/articles/4355391
+
+
+#
+###     Active Directory (AD) Domain
+## NOTE:  All of these need to be set appropriately
+adDOM:          "MYDOM1"
+adDOMFQDN:      "MYDOM1.NET"
+adDom_l:        "mydom1.net"
+adDomFqdn_l:    "mydom1"
+#
+###     AD Domain Controller (DC)
+## NOTE:  Some domain join approaches require an IP of one DC, enter just one (1) IP
+#adDomDc:        "10.x.y.z"
+adDomDc:        "10.x.y.z"
+#
+###     Distinguished Names (DM) - Organizational Units (OU)
+adDomDn:        "DC=mydom1,DC=net"
+## Computer OUs
+#
+###     RPM Package Pre-requisites
+## Tested with 'realm join', which uses 'adcli' and software)
+adDomPreSw:
+  - adcli
+  - krb5-workstation
+  - nfs-utils
+  - oddjob
+  - oddjob-mkhomedir
+  - realmd
+  - samba
+  - samba-client
+  - samba-common
+  - samba-common-tools
+  - samba-winbind
+  - samba-winbind-clients
+# NO #  - samba-winbind-krb5-locator
+  - samba-winbind-modules
+  - sssd
+  - sssd-ad
+  - sssd-client
+  - sssd-krb5
+  - sssd-ipa
+  - sssd-ldap
+  - sssd-nfs-idmap
+  - sssd-proxy
+  - sssd-winbind-idmap
+  - tdb-tools
+
+

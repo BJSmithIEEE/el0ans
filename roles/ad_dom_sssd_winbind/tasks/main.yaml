@@ -1,0 +1,421 @@
+#
+#       ./ansible/roles/adDomSssdWinbind/tasks/main.yaml       
+#
+### See Red Hat Solutions 3802321 (including comments 2357065 2358242)
+#   - https://access.redhat.com/solutions/3802321
+#   - https://access.redhat.com/solutions/3802321#comment-2357065  (FIPS crypto policies)
+#   - https://access.redhat.com/solutions/3802321#comment-2358242  (adcli instead of realm join)
+#   - https://access.redhat.com/solutions/3802321#comment-2361615  (additional RPM packages and man 8 idmap_* pages)
+# Also see (for some background):
+#   - https://access.redhat.com/articles/4355391
+
+- debug:
+    msg:  "DEBUG:  {{ ansible_os_family}}{{ ansible_distribution_major_version }}({{ansible_distribution}}) /// myProd({{ myProd | default ('') }}) /// myRole({{ myRole | default('') }}) /// myCommit({{ myCommit | default('') }})"
+
+- name: End play on host if Production is True and Commit is not defined
+  meta: end_host
+  when: myProd is defined and myProd|bool == true and myCommit is not defined
+
+
+# There may be a better way to do this, but check if it is the first run:
+- name: Check if domain-join role (or similar) has already been executed
+  become: no
+  stat:
+    path: /etc/my-domain-initialization
+  register: domainInit
+
+- name: Exit if domain-join role (or similar) has already been executed
+  meta: end_host
+  when: domainInit.stat.exists
+
+
+#####   Can't hurt to take a backup of /etc (probably should get /var too)
+
+- name:  Full backup PRE-existing configuration (/etc/)
+  block:
+
+    - name:  Ensure backup directory exists
+      become: yes
+      file:
+        path: "/etc/adDom.backup"
+        state: directory
+        owner: "root"
+        group: "root"
+        mode:  "0700"
+        seuser: "system_u"
+        serole: "object_r"
+        setype: "etc_t"
+
+    - name:  Backup pre-existing configuration
+      become: yes
+      ignore_errors: no
+      shell:
+        chdir: "/etc"
+        cmd: "/usr/bin/tar czf adDom.backup/adDom_pre_{{ ansible_date_time.iso8601_basic_short }}.tar.gz --ignore-failed-read --xattrs --selinux exports firewalld/services krb5.conf nfs.conf pam.d samba sssd sudoers.d"
+        # deprecated after 2.9 # warn: no
+
+
+#####   This is only tested on RHEL8
+
+- name:  System Join AD Domain with SSSD-Winbind (RHEL8)
+  block:  
+
+
+### Install Software
+
+    - name:  Pre-requisite NFS-SSSD-Samba (RHEL8)
+      block:
+
+        - name:  Install SSSD-Samba Red Hat software (RHEL8)
+          become: yes
+          # We don't want a mis-joined member server/workstation due to missing software
+          ignore_errors: no
+          dnf:
+            update_cache: yes
+            # 2.11+ # nobest: true
+            download_only:  no
+            state:  present
+            name:  "{{ adDomPreSw }}"
+            allow_downgrade:  no
+            autoremove:  no
+            disable_gpg_check:  no
+            skip_broken:  no
+          notify:
+            - reload_firewalld
+            - restart_sssd
+            - restart_winbind
+            - restart_nfs_client
+
+### Set FIPS compatible crypto policies
+
+    - name:  Set Crypto Policies for AD Support (FIPS Compatible)
+      become: yes
+      shell:
+        chdir: "/etc"
+        # NO # cmd: "/usr/bin/update-crypto-policies --set DEFAULT:AD-SUPPORT"
+        cmd: "/usr/bin/update-crypto-policies --set FIPS:AD-SUPPORT"
+        # deprecated after 2.9 # warn: no
+
+
+### Firewall PRE-configuration
+
+    - name:  Firewall PRE-configuration (RHEL8)
+      block:
+
+        - name: Install additional firewall service configurations (/etc/firewalld/services/)
+          become: yes
+          copy:
+            backup: no
+            src:  "{{ item }}"
+            dest:  "/etc/firewalld/services/"
+            owner:  root
+            group:  root
+            mode:  '0644'
+            seuser:  "system_u"
+            serole:  "object_r"
+            setype:  "firewalld_etc_rw_t"
+          with_fileglob:
+            - 'firewalld/services/*'
+          notify:
+            - reload_firewalld
+
+        - name: Enable firewall service configurations (ALL)
+          become: yes
+          firewalld:
+            service: "{{ item }}"
+            state: enabled
+            zone:  public
+            permanent: yes
+            immediate: yes
+          with_items:
+            - rpc-bind
+            - samba-client
+
+        - name: Enable firewall service configurations (FILE Server)
+          become: yes
+          firewalld:
+            service: "{{ item }}"
+            state: enabled
+            zone:  public
+            permanent: yes
+            immediate: yes
+          with_items:
+          # - nfs-legacy
+          # - nfs3
+            - nfs
+            - samba
+          when:  JOINROLE is defined and JOINROLE == "YES"
+
+
+### SELinux PRE-configuration
+
+    - name:  SELinux PRE-configuration (RHEL8)
+      block:
+
+        - name: Enable SELinux configurations (ALL)
+          become: yes
+          shell:
+            cmd: "/usr/sbin/setsebool -P {{ item }} on"
+            # deprecated after 2.9 # warn: no
+          with_items:
+            - use_nfs_home_dirs
+
+        - name: Enable SELinux configurations (FILE Server)
+          become: yes
+          shell:
+            cmd: "/usr/sbin/setsebool -P {{ item }} on"
+            # deprecated after 2.9 # warn: no
+          with_items:
+            - nfs_export_all_ro
+            - nfs_export_all_rw
+            - rsync_export_all_ro
+# NO #            - samba_create_home_dirs
+            - samba_enable_home_dirs
+            - samba_export_all_ro
+            - samba_export_all_rw
+            - use_samba_home_dirs
+          when:  JOINROLE is defined and JOINROLE == "YES"
+
+
+### PRE-configuration
+## NOTE:  For 'realm join' we cannot do any pre-config of krb5.conf, sssd.conf, smb.conf
+
+
+# Server-0nly
+    - name:  FILE Server PRE-configuration (RHEL8)
+      block:
+
+        - name: NFS Services Configuration (/etc/nfs.conf)
+          become: yes
+          copy:
+            backup: yes
+            force: yes
+            src:  "nfs.conf"
+            dest:  "/etc/"
+            owner: root
+            group: root
+            mode:  '0644'
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "etc_t"
+          notify:
+            - restart_nfs_client
+            - restart_nfs_smb
+
+        - name: NFS Server Exports (/etc/exports)
+          become: yes
+          copy:
+            backup: yes
+            # Do *NOT* replace if it already exists
+            force: no
+            src:  "{{ item }}"
+            dest:  "/etc/"
+            owner: root
+            group: root
+            mode:  '0644'
+            seuser: "system_u"
+            serole: "object_r"
+            setype: "exports_t"
+          with_items:
+            - exports
+            - exports.example
+          notify:
+            - restart_nfs_client
+            - restart_nfs_smb
+
+      when:  JOINROLE is defined and JOINROLE == "YES"
+ 
+
+    - name:  Join domain (RHEL8)
+      block:
+      
+# [Greggle]  See note above, I am sure there is a better way to do this
+
+        - name: Prevent future overwrite
+          become: yes
+          shell:
+            cmd:  /bin/touch /etc/my-domain-initialization
+            # deprecated after 2.9 # warn: no
+
+
+### OPTION (Legacy):  net ads join + net ads keytab + authconfig
+## Not used - see old commit
+### OPTION (New #1):  adcli (should create a host keytab) + authconfig (may work with RHEL7 too)
+## Not used - see old commit
+
+### OPTION (New #2):  realm as recommended by Red Hat in Solution 3802321 (should create a host keytab)
+
+        - name:  Execute realm to join domain
+          become: yes
+          shell:  
+# NO #            cmd:  "/usr/sbin/realm discover {{ adDOMFQDN }} ; /usr/sbin/realm join {{ adDOMFQDN }} -U {{ JOINACCT }} --client-software=sssd --membership-software=samba --computer-ou={{ adDomDnOuCompWks }}"
+            cmd:  "/usr/sbin/realm discover {{ adDOMFQDN }} ; /usr/sbin/realm join {{ adDOMFQDN }} -U {{ JOINACCT }} --client-software=sssd --membership-software=samba"
+          args:  
+            stdin: "{{ JOINPWD }}"
+          notify:
+            - restart_sssd
+            - restart_winbind
+
+## No 'authconfig' necessary
+
+
+### Take another full backup
+
+    - name:  Post-Join (RHEL8)
+      block:
+
+
+        - name:  Full backup of NEW configuration (/etc/)
+          block:
+
+            - name:  Backup NEW configuration (/etc/)
+              become: yes
+              ignore_errors: yes
+              shell:
+                chdir: "/etc"
+                cmd: "/usr/bin/tar czf /etc/adDom.backup/adDom_NEW_{{ ansible_date_time.iso8601_basic_short }}.tar.gz --ignore-failed-read --xattrs --selinux exports firewalld/services krb5.conf nfs.conf pam.d samba sssd sudoers.d"
+                # deprecated after 2.9 # warn: no
+
+
+### NEW configuration
+
+        - name:  NEW configuration (RHEL8)
+          block:
+
+            - name: Install additional sudoers access (/etc/sudoers.d/)
+              become: yes
+              copy:
+                backup: no
+                src:  "{{ item }}"
+                dest:  "/etc/sudoers.d/"
+                owner:  root
+                group:  root
+                mode:  '0640'
+                seuser:  "system_u"
+                serole:  "object_r"
+                setype:  "etc_t"
+              with_fileglob:
+                - 'sudoers.d/*'
+
+            - name: Basic Kerberos configuration (/etc/krb5.conf)
+              become: yes
+              copy:
+                backup: yes
+                force: yes
+                src:  "krb5.conf"
+                dest:  "/etc/"
+                owner: root
+                group: root
+                mode:  '0644'
+                seuser: "system_u"
+                serole: "object_r"
+                setype: "krb5_conf_t"
+
+            - name: Final Samba configuration (/etc/samba/)
+              become: yes
+              copy:
+                backup: yes
+                force: yes
+                src:  "{{ item }}"
+                dest:  "/etc/samba/"
+                owner: root
+                group: root
+                mode:  '0644'
+                seuser: "system_u"
+                serole: "object_r"
+                setype: "samba_etc_t"
+              with_fileglob:
+                - 'samba/*'
+              notify:
+               - restart_winbind
+    
+            - name: Redo Samba NetBios alias
+              become: yes
+              ignore_errors: yes
+              ini_file:
+                backup: yes
+                create: no
+                path: /etc/samba/smb.conf
+                section: global
+                option: 'netbios aliases'
+                value: "{{ inventory_hostname_short }}"
+              notify:
+                - restart_winbind
+
+            - name: Redo SSSD configuration (/etc/sssd/)
+              become: yes
+              copy:
+                backup: yes
+                force: yes
+                src:  "{{ item }}"
+                dest:  "/etc/sssd/"
+                owner: root
+                group: root
+                mode:  '0600'
+                seuser: "system_u"
+                serole: "object_r"
+                setype: "sssd_conf_t"
+              with_fileglob:
+                - 'sssd/*'
+
+            - name: Re-replace domain (if not MYDOM1.NET)
+              block:  
+    
+                - name: Re-replace FQDN
+                  become: yes
+                  replace:
+                    backup: no
+                    path:  "/etc/{{ item }}"
+                    regexp:  MYDOM1.NET
+                    replace: "{{ adDOMFQDN }}"
+                  with_items:
+                    - 'krb5.conf'
+                    - 'samba/smb.conf'
+                    - 'sssd/sssd.conf'
+    
+                - name: Re-replace FQDN lower case
+                  become: yes
+                  replace:
+                    backup: no
+                    path:  "/etc/{{ item }}"
+                    regexp:  dom1.net
+                    replace: "{{ adDomFqdn_l }}"
+                  with_items:
+                    - 'krb5.conf'
+                    - 'samba/smb.conf'
+                    - 'sssd/sssd.conf'
+    
+                - name: Re-replace domain
+                  become: yes
+                  replace:
+                    backup: no
+                    path:  "/etc/{{ item }}"
+                    regexp:  MYDOM1
+                    replace: "{{ adDOM }}"
+                  with_items:
+                    - 'krb5.conf'
+                    - 'samba/smb.conf'
+                    - 'sssd/sssd.conf'
+    
+                - name: Re-replace domain lower case
+                  become: yes
+                  replace:
+                    backup: no
+                    path:  "/etc/{{ item }}"
+                    regexp:  dom1 
+                    replace: "{{ adDom_l }}"
+                  with_items:
+                    - 'krb5.conf'
+                    - 'samba/smb.conf'
+                    - 'sssd/sssd.conf'
+    
+              when: adDOMFQDN is defined and adDOMFQDN != "MYDOM1.NET"
+
+## NOTE:  Consider adding a winbind restart here, as it tends to not work in handler with one restart after SSSD
+
+
+  # DONE
+
+  when:
+    - ansible_distribution_major_version|int == 8
+

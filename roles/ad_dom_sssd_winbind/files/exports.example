@@ -1,0 +1,9 @@
+#
+#	/etc/exports - Example NFS export file
+
+#       Read-only to all private IPv4 subnets
+/storage/IT		10.0.0.0/255.0.0.0(sync,ro,insecure,insecure_locks)
+/storage/IT		127.0.0.0/255.0.0.0(sync,ro,insecure,insecure_locks)
+/storage/IT		172.16.0.0/255.240.0.0(sync,ro,insecure,insecure_locks)
+/storage/IT		192.168.0.0/255.255.0.0(sync,ro,insecure,insecure_locks)
+
