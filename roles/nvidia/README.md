@@ -11,7 +11,40 @@ The Ansible role(nvidia) automates installation and upgrades of NVIDIA Drivers a
 
 Only Turing and later are supported in the new 600 driver series.  This matches the requirements of the `open` driver in the prior 500 series.
 
-### Unofficial Quick Reference
+### Driver Long Term Support (LTS)
+
+The following Table breaks down the Data Center certified Long Term Support (DC-LTS) drivers, including Legacy.
+
+| **Driver** | **End of Life (EoL) [LTS?]** | **CUDA Version (at release)** | **RHEL Release Support** | **Data Center certified?** | **Extended Notes** |
+| ---:|:------ |:------:|:------:|:--:|:-----------------------------------------:|
+| Legacy **R390** | ~~2022 Dec~~ **[LTS]** | 9-10 (**9.1**) | **7** | **Yes** | only thru **RHEL7**, final DC-LTS for **Fermi**, supports thru Pascal |
+| R396 | ~~2019 Mar~~ | 9-10 (9.2) | 7 8 | - | final 32-bit x86, 300 series and Fermi driver support |
+| Legacy **R470** | ~~2024 Sep~~ **[LTS]** | 11.x (**11.4**) | **7 8** | **Yes** | only thru **RHEL8**, last DC-LTS for **Kepler**, supports thru **Ampere** |
+| R495 | ~~2023 Jun~~ | 11.x (11.5) | **7 8** | - | final 400 series and Kepler driver support |
+| Legacy **R535** | 2026 Jun **[LTS]** | 12.x (**12.2**) | **7 8 9** | **Yes** | min **Maxwell**, min **Turing** for `open` driver |
+| R550 | ~~2025 Apr~~ | 12.x (12.4) | 7 8 9 | Yes | final **RHEL7** driver, first `open` driver to be fully functional |
+| Legacy **R580** | **2028 Jun** **[LTS]** | 13.x (**13.0**) | **8 9 10** | **Yes** | first **RHEL10** driver, final DC-LTS for **Maxwell/Pascal**
+| R595 | 2027 Mar | 13.x (13.2) | 8 9 10 | Yes | final 500 driver, final 500 series and Maxwell/Pascall driver support
+| Latest R610 | 2027 Jun | 13.x (13.3) | 8 9 10 | - | min **Turing**, solely `open` driver
+
+> **TIP:**  This is a highly modified and greatly augmented table from the official NVIDIA Data Center Documentation maintained here:  https://docs.nvidia.com/datacenter/tesla/drivers/latest/supported-drivers-and-cuda-toolkit-versions.html
+
+### RHEL v. Driver Support
+
+The following Table breaks down the RHEL releases and their NVIDIA GPU hardware support as well as the DC-LTS (and version range) support.
+
+| **GPU/Driver** | **RHEL7** | **RHEL8** | **RHEL9** | **RHEL10** |
+| ----------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:| 
+| **Codename Support** | Fermi to Ada | Kepler to Blackwell | Maxwell to Blackwell | Maxwell to Blackwell |
+| **Example Product(s)** | GTX5xx, NVS3xx(some) to RTX40xx, RTXx500-Ada | GTX6xx/7xx, Kx0xx/x1xx to RTX50xx, RTXPro-x000 | GTX6xx/7xx, Kx0xx/x1xx to RTX50xx, RTXProx000 | GTX6xx/7xx, Kx0xx/x1xx to RTX50xx, RTXProx000 |
+| **Legacy 300 series** | R390 DC-LTS (R346-396) | - | - | - |
+| **Legacy 400 series** | R470 DC-TLS (all, R410-495) | R470 DC-LTS (all, R410-495) | - | - |
+| **Legacy 500 series** | R535 DC-LTS (R510-550) | R580 DC-LTS (all, R510-595) | R580 DC-LTS (R515-595) | R580 DC-LTS (R580-595, Wayland-only) |
+| **Latest 600 series** | - | R610+ | R610+ | R610+ (Wayland-only) |
+
+> TIP:  The 600 series hardware requirements matches the 500 series `open` driver requirements.  E.g., even though the 500 series supported Maxwell and Pascall, the 500 `open` driver requires Turing like the 600 series.
+
+### GPU v. Driver Matrix
 
 The following Table breaks down GPU-Hardware against Legacy and Latest Drivers (and CUDA releases)
 
@@ -25,39 +58,6 @@ The following Table breaks down GPU-Hardware against Legacy and Latest Drivers (
 | GAxxx | **Ampere** | RTX30xx, RTXAx000 | - | **max: Ampere** | supported | supported | 
 | ADxxx | **Ada** | RTX40xx, RTXx500-Ada | - | - | supported | supported | 
 | GBxxx | **Blackwell** | RTX50xx, RTXPro-x000 | - | - | supported | supported | 
-
-> TIP:  The 600 series hardware requirements matches the 500 series `open` driver requirements.  E.g., even though the 500 series supported Maxwell and Pascall, the 500 `open` driver requires Turing like the 600 series.
-
-### Data Center Certified
-
-The following Table breaks down the Data Center certified Long Term Support (DC-LTS) drivers, including Legacy.
-
-| **Driver** | **End of Life (EoL) [LTS?]** | **CUDA Version (at release)** | **RHEL Release Support** | **Data Center certified?** | **Extended Notes** |
-| ---:|:------ |:------:|:------:|:--:|:-----------------------------------------:|
-| **R390** | ~~2022 Dec~~ **[LTS]** | 9-10 (**9.1**) | **7** | **Yes** | only thru **RHEL7**, final DC-LTS for **Fermi**, supports thru Pascal |
-| R396 | ~~2019 Mar~~ | 9-10 (9.2) | 7 8 | - | final 32-bit x86, 300 series and Fermi driver support |
-| **R470** | ~~2024 Sep~~ **[LTS]** | 11.x (**11.4**) | **7 8** | **Yes** | only thru **RHEL8**, last DC-LTS for **Kepler**, supports thru **Ampere** |
-| R495 | ~~2023 Jun~~ | 11.x (11.5) | **7 8** | - | final 400 series and Kepler driver support |
-| **R535** | 2026 Jun **[LTS]** | 12.x (**12.2**) | **7 8 9** | **Yes** | min **Maxwell**, min **Turing** for `open` driver |
-| R550 | ~~2025 Apr~~ | 12.x (12.4) | 7 8 9 | Yes | final **RHEL7** driver, first `open` driver to be fully functional |
-| **R580** | **2028 Jun** **[LTS]** | 13.x (**13.0**) | **8 9 10** | **Yes** | first **RHEL10** driver, final DC-LTS for **Maxwell/Pascal**
-| R595 | 2027 Mar | 13.x (13.2) | 8 9 10 | Yes | final 500 driver, final 500 series and Maxwell/Pascall driver support
-| R610 | 2027 Jun | 13.x (13.3) | 8 9 10 | - | min **Turing**, solely `open` driver
-
-> **TIP:**  This is a highly modified and augmented table from the official NVIDIA Data Center Documentation maintained here:  https://docs.nvidia.com/datacenter/tesla/drivers/latest/supported-drivers-and-cuda-toolkit-versions.html
-
-### RHEL v. Hardware Support
-
-The following Table breaks down the RHEL releases and their NVIDIA GPU hardware support as well as the DC-LTS (and version range) support.
-
-| **GPU/Driver** | **RHEL7** | **RHEL8** | **RHEL9** | **RHEL10** |
-| ----------------:|:------------------------:|:------------------------:|:------------------------:|:------------------------:| 
-| **Codename Support** | Fermi to Ada | Kepler to Blackwell | Maxwell to Blackwell | Maxwell to Blackwell |
-| **Example Product(s)** | GTX5xx, NVS3xx(some) to RTX40xx, RTXx500-Ada | GTX6xx/7xx, Kx0xx/x1xx to RTX50xx, RTXPro-x000 | GTX6xx/7xx, Kx0xx/x1xx to RTX50xx, RTXProx000 | GTX6xx/7xx, Kx0xx/x1xx to RTX50xx, RTXProx000 |
-| **Legacy 300 series** | R390 DC-LTS (R346-396) | - | - | 
-| **Legacy 400 series** | R470 DC-TLS (all, R410-495) | R470 DC-LTS (all, R410-495) | - | - |
-| **Legacy 500 series** | R535 DC-LTS (R510-550) | R580 DC-LTS (R515-595) | R580 DC-LTS (R580-595, Wayland-only) | - |
-| **Latest 600 series** | - | R610+ | R610+ | R610+ (Wayland-only) |
 
 > TIP:  The 600 series hardware requirements matches the 500 series `open` driver requirements.  E.g., even though the 500 series supported Maxwell and Pascall, the 500 `open` driver requires Turing like the 600 series.
 
