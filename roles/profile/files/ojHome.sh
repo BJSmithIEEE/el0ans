@@ -1,31 +1,40 @@
+#
+#####
+#####	/etc/profile.d/ojFunc
+#####	User Functions for OpenJDK searching/setting
+#####
+
 #######	FUNCTIONS
 
 #####	ojHome()
 #####	export JAVA_HOME for the JRE and/or SDK of an installed OpenJDK version
-#####	parameters:
-#####	    $1  =  Java Version -- e.g., 1.8.0, 11, 17 & 21 for RHEL (OpenJDK LTS releases)
+#####	parameter(s):
+#####	    $@  =  One or more (1+) Java Version(s) -- e.g., 1.8.0, 11, 17 & 21 for RHEL (OpenJDK LTS releases)
 ojHome() {
 	# Get version
-	local jVer="${1}"
-	# Check version was passed
-	[ "${jVer}" == "" ] && echo -e "\n[SYNTAX] OpenJDK version must be passed\n" 2>> /dev/stderr && return
-	# Check version is numeric (with optional periods for 8 aka 1.8.0 and earlier)
-	local jVal="$(echo ${jVer} | /bin/sed -n 's/^\([0-9][0-9.]*\)$/\1/p' 2>> /dev/null)"
-	[ "${jVal}" == "" ] && echo -e "\n[SYNTAX] OpenJDK version passed(${jVer}) is NOT numeric\n" 2>> /dev/stderr && return
-	# Check if OpenJDK RPM for version is installed
-	/bin/rpm -q java-${jVer}-openjdk 2>&1 >> /dev/null
-	[ $? -ne 0 ] && echo -e "\n[SYSTEM] OpenJDK version passed(${jVer}) does not exist in the RPM database\n" 2>> /dev/stderr && return
-	# Check default JPackage directory path (under /usr/lib/jvm/) exists for RPM package
-	local jPkg="$(/bin/rpm -q java-${jVer}-openjdk 2>> /dev/null)"
-	[ ! -d "/usr/lib/jvm/${jPkg}" ] && echo -e "\n[SYSTEM] OpenJDK version passed(${jVer}) exists in RPM database(${jPkg}), but ...\n\tthe appropriate JAVA_HOME directory(/usr/lib/jvm/${jPkg}) does NOT seem to exist?\n" 2>> /dev/stderr && return
-	# Success, set JAVA_HOME
-	export JAVA_HOME="/usr/lib/jvm/${jPkg}"
-	echo -e "\n\texport JAVA_HOME=${JAVA_HOME}\n"
+	local jVers="$@"
+	# Check version(s) were passed
+	[ "${jVers}" == "" ] && echo -e "\n[SYNTAX] OpenJDK version(s) must be passed\n" 2>> /dev/stderr && return
+	for v in ${jVers} ; do
+		# Check version is numeric (with optional periods for 8 aka 1.8.0 and earlier)
+		local jVal="$(echo ${v} | /bin/sed -n 's/^\([0-9][0-9.]*\)$/\1/p' 2>> /dev/null)"
+		[ "${jVal}" == "" ] && echo -e "[SYNTAX] OpenJDK version passed(${v}) is NOT numeric" 2>> /dev/stderr && continue
+		# Check if OpenJDK RPM for version is installed
+		/bin/rpm -q java-${v}-openjdk 2>&1 >> /dev/null
+		[ $? -ne 0 ] && echo -e "[SYSTEM] OpenJDK version passed(${v}) does not exist in the RPM database" 2>> /dev/stderr && continue
+		# Check default JPackage directory path (under /usr/lib/jvm/) exists for RPM package
+		local jPkg="$(/bin/rpm -q java-${v}-openjdk 2>> /dev/null)"
+		[ ! -d "/usr/lib/jvm/${jPkg}" ] && echo -e "[SYSTEM] OpenJDK version passed(${v}) exists in RPM database(${jPkg}), but ...\n\tthe appropriate JAVA_HOME directory(/usr/lib/jvm/${jPkg}) does NOT seem to exist?" 2>> /dev/stderr && continue
+		# Success, set JAVA_HOME
+		export JAVA_HOME="/usr/lib/jvm/${jPkg}"
+		echo -e "\n\texport JAVA_HOME=${JAVA_HOME}\n"
+		break # exit loop, found a working one
+	done
 }
 
 #####	ojList()
 #####	list the latest release of all installed OpenJDK versions
-#####	parameters:
+#####	parameter(s):
 #####	    [-v]  =  optional verbosity -- print JAVA_HOME and all binaries for version (also verifies JPackage path exists)
 ojList(){
 	# Get verbosity
@@ -34,7 +43,7 @@ ojList(){
 	local jVers="$(/bin/rpm -qa | /bin/sed -n 's/^\(java-\([0-9][0-9.]*\)-openjdk-[0-9].*\)$/\t\2(\1)/p' 2>> /dev/null | /bin/sort 2>> /dev/null)"
 	[ "${jVers}" == "" ] && echo -e "\n[SYSTEM] No OpenJDK RPMs installed\n" 2>> dev/stderr && return
 	# Print all OpenJDK RPM versions installed
-	echo -e "\n\tVersion\tJPackage %NAME-%VERSION-%RELEASE[.%disttag].%ARCH"
+	echo -e "\n\tVersion\tJPackage (%NAME-%VERSION-%RELEASE[.%disttag].%ARCH)"
 	echo -e "\t-------\t---------------------------------------------------"
 	for v in ${jVers} ; do echo -e "\t${v}" | /bin/sed -e 's/[(]/\t/g' -e 's/[)]//g' 2>> /dev/null ; done
 	if [ "${bVerb}" == '-v' ] ; then
@@ -54,16 +63,10 @@ ojList(){
 	echo -e ""
 }
 
-
-#######	DEFAULTS (examples for user ~/.bashrc)
-
-### save PATH prior to prepending OpenJDK ./bin
-# export PATHojPre=${PATH}
-
-### default to OpenJDK 21
-# ojHome 21
-# export PATH=${JAVA_HOME}/bin:${PATHojPre}
-
-### change later to OpenJDK 17
-# ojHome 17
-# export PATH=${JAVA_HOME}/bin:${PATHojPre}
+#####	EXAMPLES
+### List all system installed OpenJDK runtimes w/verbosity listing binaries
+# $ ojList -v
+### Default to system installed OpenJDK 1.8.0, then try 17, then 21, then 11
+# $ command -v ojHome &>/dev/null && ojHome 1.8.0 17 21 11
+### If JAVA_HOME set, then pre-empt the system PATH default/alternatives Java
+# $ [ "${JAVA_HOME}" != "" ] && export PATH=${JAVA_HOME}/bin:PATH=${PATH}
